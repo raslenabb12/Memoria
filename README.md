@@ -2,7 +2,7 @@
 
 <div align="center">
   <a href="https://github.com/raslenabb12/Memoria">
-    <img src="https://github.com/raslenabb12/Memoria/blob/main/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.webp" alt="Memoria" width="200">
+    <img src="https://github.com/raslenabb12/Memoria/blob/master/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.webp" alt="Memoria" width="200">
   </a>
 </div>
 
