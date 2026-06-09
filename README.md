@@ -9,7 +9,7 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Android](https://img.shields.io/badge/Android-8.0%2B-green.svg)](https://android.com)
 [![TFLite](https://img.shields.io/badge/TFLite-MobileCLIP--S0-orange.svg)](https://github.com/apple/ml-mobileclip)
-[![Stars](https://img.shields.io/github/stars/yourusername/memoria?style=social)](https://github.com/yourusername/memoria/stargazers)
+[![Stars](https://img.shields.io/github/stars/raslenabb12/Memoria?style=social)](https://github.com/raslenabb12/Memoria/stargazers)
 
 [Screenshots](#screenshots) · [How it works](#how-it-works) · [Getting started](#getting-started) · [Architecture](#architecture) · [Contributing](#contributing)
 
