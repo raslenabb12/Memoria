@@ -1,6 +1,10 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/yourusername/memoria/main/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" width="120" height="120" alt="Memoria icon" />
+<div align="center">
+  <a href="https://github.com/raslenabb12/Memoria">
+    <img src="https://github.com/raslenabb12/Memoria/blob/main/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.webp" alt="Memoria" width="200">
+  </a>
+</div>
 
 # Memoria
 
