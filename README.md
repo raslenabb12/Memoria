@@ -70,8 +70,7 @@ The model used is **MobileCLIP-S0** — Apple's mobile-optimized CLIP variant th
 | Vocab | OpenAI CLIP BPE tokenizer, 49,408 tokens |
 | Embedding dim | 512 floats per image/query |
 | Similarity | Cosine similarity (L2-normalized dot product) |
-| DB | Room + BLOB storage |
-| Indexing | WorkManager background job |
+| DB | Room |
 
 ---
 
