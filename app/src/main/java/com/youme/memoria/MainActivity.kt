@@ -73,7 +73,7 @@ class MainActivity : AppCompatActivity() {
         )
         lifecycleScope.launch(Dispatchers.IO) {
             //repo.initializeImageModel()
-            scanGallery()
+            //scanGallery()
         }
 
     }
@@ -83,7 +83,9 @@ class MainActivity : AppCompatActivity() {
         ) { isGranted ->
 
             if (isGranted) {
-                //scanGallery()
+                lifecycleScope.launch {
+                    scanGallery()
+                }
             } else {
                 Toast.makeText(
                     this,
@@ -93,17 +95,24 @@ class MainActivity : AppCompatActivity() {
             }
         }
     private fun requestGalleryPermission() {
+        val permission = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            Manifest.permission.READ_MEDIA_IMAGES
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
         when {
             ContextCompat.checkSelfPermission(
                 this,
-                Manifest.permission.READ_EXTERNAL_STORAGE
+                permission
             ) == PackageManager.PERMISSION_GRANTED -> {
-                //scanGallery()
+                lifecycleScope.launch {
+                    scanGallery()
+                }
             }
 
             else -> {
                 requestPermissionLauncher.launch(
-                    Manifest.permission.READ_EXTERNAL_STORAGE
+                    permission
                 )
             }
         }
@@ -202,20 +211,24 @@ class MainActivity : AppCompatActivity() {
                 loadingBox.isVisible = true
             }
             toProcess.forEachIndexed { index, uri ->
-                Log.d("test_progress", "encodeImages: $index")
-                val startTime = System.currentTimeMillis()
-                val encodedImage = repo.encodeImage(this@MainActivity, uri)
+                try {
+                    Log.d("test_progress", "encodeImages: $index")
+                    val startTime = System.currentTimeMillis()
+                    val encodedImage = repo.encodeImage(this@MainActivity, uri)
 
 
-                repo.saveEmbedding(uri.toString(), encodedImage)
-                val endTime = System.currentTimeMillis()
+                    repo.saveEmbedding(uri.toString(), encodedImage)
+                    val endTime = System.currentTimeMillis()
 
-                val etaMs = (endTime - startTime).toFloat() * (allSize - index - 1)
-                val etaMin = (etaMs / 1000f) / 60
-                withContext(Dispatchers.Main) {
-                    progressText.text =
-                        "Encoding Image $index/${allSize} ETA: ${"%.1f".format(etaMin)}Min"
-                    progressbar.progress = index
+                    val etaMs = (endTime - startTime).toFloat() * (allSize - index - 1)
+                    val etaMin = (etaMs / 1000f) / 60
+                    withContext(Dispatchers.Main) {
+                        progressText.text =
+                            "Encoding Image $index/${allSize} ETA: ${"%.1f".format(etaMin)}Min"
+                        progressbar.progress = index
+                    }
+                } catch (e: Exception) {
+                    // to add later
                 }
 
 

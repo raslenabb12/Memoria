@@ -6,8 +6,8 @@ import org.json.JSONObject
 
 object CLIPTokenizer {
     private const val CONTEXT_LENGTH = 77
-    private const val SOT_TOKEN = 49406  // start of text
-    private const val EOT_TOKEN = 49407  // end of text
+    private const val SOT_TOKEN = 49406
+    private const val EOT_TOKEN = 49407
     private lateinit var encoder: Map<String, Int>
 
     fun init(context: Context) {

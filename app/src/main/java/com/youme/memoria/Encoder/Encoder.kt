@@ -110,7 +110,11 @@ class MemoriaEncoder(private val context: Context) {
 
 
     fun cosineSimilarity(a: FloatArray, b: FloatArray): Float {
-        return a.zip(b.toTypedArray()).sumOf { (x, y) -> (x * y).toDouble() }.toFloat()
+        var dotProduct = 0f
+        for (i in a.indices) {
+            dotProduct += a[i] * b[i]
+        }
+        return dotProduct
     }
 
     private fun l2Normalize(v: FloatArray): FloatArray {
@@ -128,12 +132,12 @@ class MemoriaEncoder(private val context: Context) {
     }
 
     private fun loadModel(fileName: String): MappedByteBuffer {
-        val fd = context.assets.openFd(fileName)
-        return FileInputStream(fd.fileDescriptor).channel.map(
-            FileChannel.MapMode.READ_ONLY, fd.startOffset, fd.declaredLength
-        )
+        return context.assets.openFd(fileName).use { fd ->
+            FileInputStream(fd.fileDescriptor).channel.map(
+                FileChannel.MapMode.READ_ONLY, fd.startOffset, fd.declaredLength
+            )
+        }
     }
-
     private fun loadEmbeddingTable() {
         val stream = context.assets.open("token_embeddings_f16.npy")
         val bytes = stream.readBytes()
@@ -167,7 +171,7 @@ class MemoriaEncoder(private val context: Context) {
         if (::imageInterpreter.isInitialized)  imageInterpreter.close()
     }
     fun freeTextEncoder() {
-        if (::imageInterpreter.isInitialized) textInterpreter.close()
+        if (::textInterpreter.isInitialized) textInterpreter.close()
         embeddingTable = emptyArray()
     }
     fun close() {
