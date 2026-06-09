@@ -17,7 +17,7 @@ class MemoriaEncoder(private val context: Context) {
     private var gpuDelegate: org.tensorflow.lite.gpu.GpuDelegate? = null
     private lateinit var imageInterpreter: Interpreter
     private lateinit var textInterpreter: Interpreter
-    private lateinit var embeddingTable: Array<FloatArray>  // [49408, 512]
+    private lateinit var embeddingTable: Array<FloatArray>
 
     companion object {
         const val IMAGE_SIZE = 256
@@ -47,20 +47,16 @@ class MemoriaEncoder(private val context: Context) {
         CLIPTokenizer.init(context)
     }
 
-    // ── Image → embedding ─────────────────────────────────────────────────────
 
     fun encodeImage(bitmap: Bitmap): FloatArray {
-        // Resize to 256×256
         val scaled = bitmap.scale(IMAGE_SIZE, IMAGE_SIZE)
 
-        // Fill input buffer [1, 256, 256, 3] NHWC float32
         val input = ByteBuffer.allocateDirect(1 * IMAGE_SIZE * IMAGE_SIZE * 3 * 4)
             .order(ByteOrder.nativeOrder())
 
         val pixels = IntArray(IMAGE_SIZE * IMAGE_SIZE)
         scaled.getPixels(pixels, 0, IMAGE_SIZE, 0, 0, IMAGE_SIZE, IMAGE_SIZE)
 
-        // CLIP normalization: mean=[0.485,0.456,0.406] std=[0.229,0.224,0.225]
         val mean = floatArrayOf(0.485f, 0.456f, 0.406f)
         val std  = floatArrayOf(0.229f, 0.224f, 0.225f)
 
@@ -79,20 +75,18 @@ class MemoriaEncoder(private val context: Context) {
         return l2Normalize(output[0])
     }
 
-    // ── Text → embedding ──────────────────────────────────────────────────────
 
     fun encodeText(query: String): FloatArray {
-        val tokens = CLIPTokenizer.tokenize(query)  // [77] longs
+        val tokens = CLIPTokenizer.tokenize(query)
         val eosPos = CLIPTokenizer.eosPosition(tokens)
 
-        // Look up embeddings: tokens → [1, 77, 512]
+
         val tokenEmbeds = Array(1) { Array(CONTEXT_LENGTH) { FloatArray(EMBED_DIM) } }
         for (i in 0 until CONTEXT_LENGTH) {
             val tokenId = tokens[i].toInt().coerceIn(0, VOCAB_SIZE - 1)
             embeddingTable[tokenId].copyInto(tokenEmbeds[0][i])
         }
 
-        // Transpose to [1, 512, 77] — onnx2tf transposed the input
         val transposed = ByteBuffer.allocateDirect(1 * EMBED_DIM * CONTEXT_LENGTH * 4)
             .order(ByteOrder.nativeOrder())
         for (d in 0 until EMBED_DIM) {
@@ -114,12 +108,10 @@ class MemoriaEncoder(private val context: Context) {
         return l2Normalize(textOutput[0])
     }
 
-    // ── Cosine similarity ─────────────────────────────────────────────────────
 
     fun cosineSimilarity(a: FloatArray, b: FloatArray): Float {
         return a.zip(b.toTypedArray()).sumOf { (x, y) -> (x * y).toDouble() }.toFloat()
     }
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private fun l2Normalize(v: FloatArray): FloatArray {
         var sumSq = 0f
