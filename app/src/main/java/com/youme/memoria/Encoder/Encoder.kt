@@ -24,16 +24,23 @@ class MemoriaEncoder(private val context: Context) {
         const val EMBED_DIM = 512
         const val CONTEXT_LENGTH = 77
         const val VOCAB_SIZE = 49408
-    }
 
-    fun initialize() {
+    }
+    fun initializeImageEncoder(){
         val options = Interpreter.Options().apply {
             numThreads = 4
-                 gpuDelegate = org.tensorflow.lite.gpu.GpuDelegate()
-                addDelegate(gpuDelegate)
+            gpuDelegate = org.tensorflow.lite.gpu.GpuDelegate()
+            addDelegate(gpuDelegate)
         }
 
         imageInterpreter = Interpreter(loadModel("mobileclip_s0_image_float32.tflite"), options)
+    }
+    fun initializeTextEncoder() {
+        val options = Interpreter.Options().apply {
+            numThreads = 4
+            gpuDelegate = org.tensorflow.lite.gpu.GpuDelegate()
+            addDelegate(gpuDelegate)
+        }
         textInterpreter  = Interpreter(loadModel("mobileclip_s0_text_transformer_float32.tflite"), options)
 
         loadEmbeddingTable()
@@ -112,12 +119,20 @@ class MemoriaEncoder(private val context: Context) {
     fun cosineSimilarity(a: FloatArray, b: FloatArray): Float {
         return a.zip(b.toTypedArray()).sumOf { (x, y) -> (x * y).toDouble() }.toFloat()
     }
-
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private fun l2Normalize(v: FloatArray): FloatArray {
-        val norm = sqrt(v.map { it * it }.sum())
-        return if (norm > 0) v.map { it / norm }.toFloatArray() else v
+        var sumSq = 0f
+        for (x in v) {
+            sumSq += x * x
+        }
+        val norm = sqrt(sumSq)
+        if (norm > 0f) {
+            for (i in v.indices) {
+                v[i] = v[i] / norm
+            }
+        }
+        return v
     }
 
     private fun loadModel(fileName: String): MappedByteBuffer {
@@ -155,6 +170,13 @@ class MemoriaEncoder(private val context: Context) {
                 sign * m * 2.0.pow(e.toDouble()).toFloat()
             }
         }
+    }
+    fun freeImageEncoder() {
+        if (::imageInterpreter.isInitialized)  imageInterpreter.close()
+    }
+    fun freeTextEncoder() {
+        if (::imageInterpreter.isInitialized) textInterpreter.close()
+        embeddingTable = emptyArray()
     }
     fun close() {
         imageInterpreter.close()

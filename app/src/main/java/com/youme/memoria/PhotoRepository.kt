@@ -4,9 +4,12 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
+import androidx.core.net.toUri
+import androidx.room.Query
 import com.youme.inkdex.roomCach.PhotoEntity
 import com.youme.inkdex.roomCach.PhotosDatabase
 import com.youme.inkdex.roomCach.toByteArray
+import com.youme.inkdex.roomCach.toFloatArray
 import com.youme.memoria.Encoder.MemoriaEncoder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -17,14 +20,37 @@ class PhotoRepository(context: Context) {
     private val memoriaEncoder = MemoriaEncoder(context)
 
     suspend fun getCountPhotos() = dao.count()
+     var initializeedTextModel  = false
 
-    suspend fun initializeModel() {
+    suspend fun initializeImageModel() {
         withContext(Dispatchers.IO){
-            memoriaEncoder.initialize()
+            memoriaEncoder.initializeImageEncoder()
         }
     }
+    suspend fun initializeTextModel() {
+        if (initializeedTextModel) return
+        withContext(Dispatchers.IO){
+            memoriaEncoder.initializeTextEncoder()
+            initializeedTextModel = true
+        }
+    }
+    suspend fun alreadyExistsList() = dao.getAll()
+
     suspend fun encodeImage(context : Context,image: Uri) : FloatArray {
         return withContext(Dispatchers.IO){ memoriaEncoder.encodeImage(uriToBitmap(context,image)) }
+    }
+
+    suspend fun search(query: String) : List<Pair<Uri,Float>>{
+        return withContext(Dispatchers.IO){
+            val encodedText = memoriaEncoder.encodeText(query)
+            val allPhotos = dao.getAll()
+
+            allPhotos.map { photo->
+                val score  = memoriaEncoder.cosineSimilarity(encodedText,photo.embedding.toFloatArray())
+                photo.uri.toUri() to score
+            }.sortedByDescending { it.second }
+
+        }
     }
 
     suspend fun saveEmbedding(uri: String, embedding: FloatArray) {
@@ -43,7 +69,7 @@ class PhotoRepository(context: Context) {
     suspend fun alreadyExists(uri: String): Boolean = dao.existsByUri(uri)!=null
 
      fun unloadModel() = memoriaEncoder.close()
-
+    fun unloadImageModel() = memoriaEncoder.freeImageEncoder()
 
     fun uriToBitmap(context: Context, uri: Uri): Bitmap {
         val source = ImageDecoder.createSource(context.contentResolver, uri)

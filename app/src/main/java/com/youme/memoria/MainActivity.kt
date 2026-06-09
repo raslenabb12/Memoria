@@ -12,6 +12,7 @@ import android.os.Looper
 import android.provider.MediaStore
 import android.util.Log
 import android.util.TimeUtils
+import android.view.inputmethod.EditorInfo
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -20,6 +21,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
@@ -27,9 +29,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.util.Util
-import com.youme.memoria.Encoder.EncodeService
+import com.google.android.material.textfield.TextInputEditText
 import com.youme.memoria.ImageLoading.ImageAdapter
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.sql.Time
@@ -39,12 +42,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var Adapter: ImageAdapter
     private lateinit var repo : PhotoRepository
     private lateinit var observer: GalleryObserver
+    private lateinit var imageEncodingJob : Job
+    private val imglist  = mutableListOf<Uri>()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         repo = PhotoRepository(this@MainActivity)
 
-
+        setupSearch()
         requestGalleryPermission()
 
         Adapter = ImageAdapter(emptyList())
@@ -67,7 +72,7 @@ class MainActivity : AppCompatActivity() {
             observer
         )
         lifecycleScope.launch(Dispatchers.IO) {
-            repo.initializeModel()
+            //repo.initializeImageModel()
             scanGallery()
         }
 
@@ -106,11 +111,10 @@ class MainActivity : AppCompatActivity() {
 
 
     suspend fun scanGallery() {
-        val imglist = mutableListOf<Uri>()
+        val progressbarCircule = findViewById<ProgressBar>(R.id.progressBar2)
+        val progressbar = findViewById<ProgressBar>(R.id.progressBar)
         val loadingBox  = findViewById<CardView>(R.id.loadingBox)
         val progressText = findViewById<TextView>(R.id.textView)
-        val progressbar = findViewById<ProgressBar>(R.id.progressBar)
-
         val projection = arrayOf(
             MediaStore.Images.Media._ID,
             MediaStore.Images.Media.DISPLAY_NAME,
@@ -146,19 +150,59 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-//        val intent = Intent(this, EncodeService::class.java)
-//        intent.putStringArrayListExtra("uris", ArrayList(imglist.map { it.toString() }.take(100)))
-//        ContextCompat.startForegroundService(this, intent)
+
+        withContext(Dispatchers.Main){
+            Adapter.sumbit_data(imglist)
+        }
         lifecycleScope.launch {
-            val allSize = imglist.size
-            var proccsed = 0
+            val alreadyExists = repo.alreadyExistsList().map { it.uri.toUri() }
+            progressbarCircule.max=imglist.size
+            progressbarCircule.progress = alreadyExists.size
+
+            progressbarCircule.setOnClickListener {
+                lifecycleScope.launch {
+                    if (::imageEncodingJob.isInitialized && imageEncodingJob.isActive) {
+                        progressbarCircule.apply {
+                            max = imglist.size
+                            progress = alreadyExists.size
+                            isIndeterminate = false
+                        }
+
+                        imageEncodingJob.cancel()
+                        repo.unloadImageModel()
+                        loadingBox.isVisible = false
+                        return@launch
+                    }
+                    progressbarCircule.isIndeterminate = true
+                    progressbar.isIndeterminate = true
+                    loadingBox.isVisible = true
+                    progressText.text = "Loading image encoder model..."
+
+                    repo.initializeImageModel()
+                    encodeImages()
+                }
+
+            }
+        }
+    }
+    private fun encodeImages(){
+        val loadingBox  = findViewById<CardView>(R.id.loadingBox)
+        val progressText = findViewById<TextView>(R.id.textView)
+        val progressbar = findViewById<ProgressBar>(R.id.progressBar)
+        progressbar.isIndeterminate=false
+        imageEncodingJob = lifecycleScope.launch {
+            val alreadyExists = repo.alreadyExistsList().map { it.uri.toUri() }
+            val toProcess = imglist.filter { !alreadyExists.contains(it) }
+
+
+            val allSize = toProcess.size
+
             withContext(Dispatchers.Main) {
                 progressbar.max = allSize
                 loadingBox.isVisible = true
             }
-
-            imglist.forEachIndexed { index, uri ->
-
+            toProcess.forEachIndexed { index, uri ->
+                Log.d("test_progress", "encodeImages: $index")
                 val startTime = System.currentTimeMillis()
                 val encodedImage = repo.encodeImage(this@MainActivity, uri)
 
@@ -176,29 +220,38 @@ class MainActivity : AppCompatActivity() {
 
 
             }
-//            imglist.chunked(4).forEach {uriBatch->
-//
-//                val result = uriBatch.map { uri->
-//                    async (Dispatchers.IO){
-//                        val embeddings = repo.encodeImage(this@MainActivity, uri)
-//                        uri.toString() to embeddings
-//                    }
-//                }.awaitAll()
-//
-//                repo.saveEmbeddingsBatch(result)
-//
-//                proccsed+=uriBatch.size
-//
-//                withContext(Dispatchers.Main){
-//                    progressText.text="Encoding Image $proccsed/${allSize}"
-//                    progressbar.progress =proccsed
-//                }
-//            }
-//        }
-        withContext(Dispatchers.Main){
-            Adapter.sumbit_data(imglist)
         }
+    }
+    private fun setupSearch(){
+        val search_input = findViewById<TextInputEditText>(R.id.search_input)
+        val loadingBox  = findViewById<CardView>(R.id.loadingBox)
+        val progressText = findViewById<TextView>(R.id.textView)
+        val progressbar = findViewById<ProgressBar>(R.id.progressBar)
+        search_input.setOnEditorActionListener { v, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
 
+
+                lifecycleScope.launch {
+                    if (!repo.initializeedTextModel){
+                        loadingBox.isVisible=true
+                        progressbar.isIndeterminate = true
+                        progressText.text = "Loading Text Encoder And Toknizer..."
+                        repo.initializeTextModel()
+                        loadingBox.isVisible=false
+                    }
+                    val data = repo.search(search_input.text.toString())
+                    Log.d("test_data", "setupSearch: $data")
+
+                    withContext(Dispatchers.Main){
+                        Adapter.sumbit_data(data.map { it.first })
+                    }
+                }
+
+
+                true
+            } else {
+                false
+            }
         }
     }
     override fun onDestroy() {
