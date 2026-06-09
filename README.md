@@ -48,8 +48,6 @@ You type:  "my dog with a hat"
 - **Semantic photo search** — find photos by meaning, not metadata. "Sunset at sea" finds sunset photos even if they have no tags.
 - **Fully offline** — MobileCLIP-S0 runs entirely on-device via TFLite. No API keys, no cloud calls.
 - **Privacy first** — photos never leave your device. No account required. No analytics.
-- **Background indexing** — indexes your gallery silently while your phone charges via WorkManager.
-- **Incremental updates** — new photos are indexed automatically via MediaStore ContentObserver.
 - **Open source** — Apache 2.0. Fork it, extend it, learn from it.
 
 ---
