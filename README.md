@@ -42,6 +42,8 @@ You type:  "my dog with a hat"
 ---
 
 ## Screenshots
+|<img src="images/Screenshot_1.jpg" alt="Screenshot 3" width="250"/>|
+|:---:|
 
 > _Coming soon — add your own screenshots here_
 
