@@ -89,7 +89,7 @@ The model used is **MobileCLIP-S0** — Apple's mobile-optimized CLIP variant th
 ### Build from source
 
 ```bash
-git clone https://github.com/yourusername/memoria.git
+git clone https://github.com/raslenabb12/memoria.git
 cd memoria
 ```
 
