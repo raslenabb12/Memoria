@@ -212,7 +212,6 @@ class MainActivity : AppCompatActivity() {
             }
             toProcess.forEachIndexed { index, uri ->
                 try {
-                    Log.d("test_progress", "encodeImages: $index")
                     val startTime = System.currentTimeMillis()
                     val encodedImage = repo.encodeImage(this@MainActivity, uri)
 
@@ -259,8 +258,6 @@ class MainActivity : AppCompatActivity() {
                         Adapter.sumbit_data(data.map { it.first })
                     }
                 }
-
-
                 true
             } else {
                 false

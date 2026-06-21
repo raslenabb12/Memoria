@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
 import org.tensorflow.lite.Interpreter
+import org.tensorflow.lite.nnapi.NnApiDelegate
 import java.io.FileInputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -12,9 +13,12 @@ import java.nio.channels.FileChannel
 import kotlin.math.pow
 import kotlin.math.sqrt
 import androidx.core.graphics.scale
+import kotlin.math.roundToInt
 
 class MemoriaEncoder(private val context: Context) {
-    private var gpuDelegate: org.tensorflow.lite.gpu.GpuDelegate? = null
+    private var imageNnDelegate: NnApiDelegate? = null
+    private var textNnDelegate: NnApiDelegate? = null
+
     private lateinit var imageInterpreter: Interpreter
     private lateinit var textInterpreter: Interpreter
     private lateinit var embeddingTable: Array<FloatArray>
@@ -24,90 +28,111 @@ class MemoriaEncoder(private val context: Context) {
         const val EMBED_DIM = 512
         const val CONTEXT_LENGTH = 77
         const val VOCAB_SIZE = 49408
-
     }
-    fun initializeImageEncoder(){
+
+    fun initializeImageEncoder() {
         val options = Interpreter.Options().apply {
             numThreads = 4
-            gpuDelegate = org.tensorflow.lite.gpu.GpuDelegate()
-            addDelegate(gpuDelegate)
+            useXNNPACK = true
         }
-
-        imageInterpreter = Interpreter(loadModel("mobileclip_s0_image_float32.tflite"), options)
+        imageInterpreter = Interpreter(loadModel("mobileclip_s0_image_v2.tflite"), options)
+        Log.d("MemoriaEncoder", "Image Shape: ${imageInterpreter.getInputTensor(0).shape().joinToString()}")
     }
+
     fun initializeTextEncoder() {
         val options = Interpreter.Options().apply {
             numThreads = 4
-            gpuDelegate = org.tensorflow.lite.gpu.GpuDelegate()
-            addDelegate(gpuDelegate)
         }
-        textInterpreter  = Interpreter(loadModel("mobileclip_s0_text_transformer_float32.tflite"), options)
+
+        textInterpreter = Interpreter(loadModel("mobileclip_text_reimpl_v2.tflite"), options)
 
         loadEmbeddingTable()
         CLIPTokenizer.init(context)
     }
 
-
     fun encodeImage(bitmap: Bitmap): FloatArray {
-        val scaled = bitmap.scale(IMAGE_SIZE, IMAGE_SIZE)
-
-        val input = ByteBuffer.allocateDirect(1 * IMAGE_SIZE * IMAGE_SIZE * 3 * 4)
-            .order(ByteOrder.nativeOrder())
+        val scaled = centerCropAndScale(bitmap, IMAGE_SIZE)
 
         val pixels = IntArray(IMAGE_SIZE * IMAGE_SIZE)
         scaled.getPixels(pixels, 0, IMAGE_SIZE, 0, 0, IMAGE_SIZE, IMAGE_SIZE)
 
-        val mean = floatArrayOf(0.485f, 0.456f, 0.406f)
-        val std  = floatArrayOf(0.229f, 0.224f, 0.225f)
+        val mean = floatArrayOf(0.48145467f, 0.4578275f, 0.40821072f)
+        val std  = floatArrayOf(0.26862955f, 0.2613026f, 0.2757771f)
+
+        val input = ByteBuffer.allocateDirect(1 * 3 * IMAGE_SIZE * IMAGE_SIZE * 4)
+            .order(ByteOrder.nativeOrder())
+
 
         for (pixel in pixels) {
-            val r = ((pixel shr 16 and 0xFF) / 255f - mean[0]) / std[0]
-            val g = ((pixel shr  8 and 0xFF) / 255f - mean[1]) / std[1]
-            val b = ((pixel       and 0xFF) / 255f - mean[2]) / std[2]
-            input.putFloat(r)
-            input.putFloat(g)
-            input.putFloat(b)
+            input.putFloat(((pixel shr 16 and 0xFF) / 255f - mean[0]) / std[0])
+        }
+
+        for (pixel in pixels) {
+            input.putFloat(((pixel shr 8 and 0xFF) / 255f - mean[1]) / std[1])
+        }
+
+        for (pixel in pixels) {
+            input.putFloat(((pixel and 0xFF) / 255f - mean[2]) / std[2])
         }
 
         val output = Array(1) { FloatArray(EMBED_DIM) }
         imageInterpreter.run(input, output)
 
-        return l2Normalize(output[0])
-    }
+        val result = l2Normalize(output[0])
 
+        return result
+    }
 
     fun encodeText(query: String): FloatArray {
         val tokens = CLIPTokenizer.tokenize(query)
-        val eosPos = CLIPTokenizer.eosPosition(tokens)
 
 
-        val tokenEmbeds = Array(1) { Array(CONTEXT_LENGTH) { FloatArray(EMBED_DIM) } }
+        var eosPos = tokens.indexOf(49407)
+
+        Log.d("CLIP_DEBUG", "Token IDs: ${tokens.take(10).joinToString()}")
+        Log.d("CLIP_DEBUG", "EOS pos: $eosPos")
+        Log.d("CLIP_DEBUG", "Token 0 embed first 5: ${embeddingTable[tokens[0].toInt()].take(5).joinToString()}")
+
+        if (eosPos == -1) eosPos = tokens.indexOf(0)
+        if (eosPos == -1) eosPos = 76
+
+        val textInput = ByteBuffer.allocateDirect(1 * CONTEXT_LENGTH * EMBED_DIM * 4)
+            .order(ByteOrder.nativeOrder())
+
         for (i in 0 until CONTEXT_LENGTH) {
             val tokenId = tokens[i].toInt().coerceIn(0, VOCAB_SIZE - 1)
-            embeddingTable[tokenId].copyInto(tokenEmbeds[0][i])
-        }
-
-        val transposed = ByteBuffer.allocateDirect(1 * EMBED_DIM * CONTEXT_LENGTH * 4)
-            .order(ByteOrder.nativeOrder())
-        for (d in 0 until EMBED_DIM) {
-            for (t in 0 until CONTEXT_LENGTH) {
-                transposed.putFloat(tokenEmbeds[0][t][d])
+            val embed = embeddingTable[tokenId]
+            for (value in embed) {
+                textInput.putFloat(value)
             }
         }
+        textInput.rewind()
 
-        val eosInput  = longArrayOf(eosPos)
+
+        val eosInput = intArrayOf(eosPos)
+
+
         val textOutput = Array(1) { FloatArray(EMBED_DIM) }
 
-        val inputs  = mapOf(0 to transposed, 1 to eosInput)
-        val outputs = mapOf(0 to textOutput)
-        textInterpreter.runForMultipleInputsOutputs(
-            inputs.values.toTypedArray(),
-            outputs
-        )
+
+        val embedIdx = textInterpreter.getInputIndex("serving_default_token_embeds:0")
+        val eosIdx = textInterpreter.getInputIndex("serving_default_eos_positions:0")
+
+        val inputs = arrayOfNulls<Any>(2)
+        inputs[embedIdx] = textInput
+        inputs[eosIdx] = eosInput
+
+        val outputs = mutableMapOf<Int, Any>()
+        outputs[0] = textOutput
+
+        try {
+            textInterpreter.runForMultipleInputsOutputs(inputs, outputs)
+        } catch (e: Exception) {
+            // next
+        }
 
         return l2Normalize(textOutput[0])
     }
-
 
     fun cosineSimilarity(a: FloatArray, b: FloatArray): Float {
         var dotProduct = 0f
@@ -138,45 +163,64 @@ class MemoriaEncoder(private val context: Context) {
             )
         }
     }
+    private fun centerCropAndScale(bitmap: Bitmap, targetSize: Int): Bitmap {
+        val width = bitmap.width
+        val height = bitmap.height
+
+        val scale = if (width < height) {
+            targetSize.toFloat() / width.toFloat()
+        } else {
+            targetSize.toFloat() / height.toFloat()
+        }
+
+        val scaledWidth = (width * scale).roundToInt()
+        val scaledHeight = (height * scale).roundToInt()
+
+        val scaledBitmap = bitmap.scale(scaledWidth, scaledHeight)
+
+        val xOffset = (scaledWidth - targetSize) / 2
+        val yOffset = (scaledHeight - targetSize) / 2
+
+        val croppedBitmap = Bitmap.createBitmap(scaledBitmap, xOffset, yOffset, targetSize, targetSize)
+
+        if (scaledBitmap != bitmap && scaledBitmap != croppedBitmap) {
+            scaledBitmap.recycle()
+        }
+
+        return croppedBitmap
+    }
+
     private fun loadEmbeddingTable() {
-        val stream = context.assets.open("token_embeddings_f16.npy")
+        val stream = context.assets.open("token_embeddings_f32.bin")
         val bytes = stream.readBytes()
+
         val buf = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
-        buf.position(128)
 
         embeddingTable = Array(VOCAB_SIZE) { FloatArray(EMBED_DIM) }
+
         for (i in 0 until VOCAB_SIZE) {
             for (j in 0 until EMBED_DIM) {
-                embeddingTable[i][j] = fp16ToFp32(buf.short)
+                embeddingTable[i][j] = buf.float
             }
         }
+
     }
 
-    private fun fp16ToFp32(half: Short): Float {
-        val h = half.toInt() and 0xFFFF
-        val exp = (h shr 10) and 0x1F
-        val man = h and 0x3FF
-        return when {
-            exp == 0 && man == 0 -> 0f
-            exp == 31 -> if (man == 0) Float.POSITIVE_INFINITY else Float.NaN
-            else -> {
-                val sign = if (h and 0x8000 != 0) -1f else 1f
-                val e = if (exp == 0) -14 else exp - 15
-                val m = if (exp == 0) man / 1024f else 1f + man / 1024f
-                sign * m * 2.0.pow(e.toDouble()).toFloat()
-            }
-        }
-    }
     fun freeImageEncoder() {
-        if (::imageInterpreter.isInitialized)  imageInterpreter.close()
+        if (::imageInterpreter.isInitialized) imageInterpreter.close()
+        imageNnDelegate?.close()
+        imageNnDelegate = null
     }
+
     fun freeTextEncoder() {
         if (::textInterpreter.isInitialized) textInterpreter.close()
+        textNnDelegate?.close()
+        textNnDelegate = null
         embeddingTable = emptyArray()
     }
+
     fun close() {
-        imageInterpreter.close()
-        textInterpreter.close()
-        gpuDelegate?.close()
+        freeImageEncoder()
+        freeTextEncoder()
     }
 }
