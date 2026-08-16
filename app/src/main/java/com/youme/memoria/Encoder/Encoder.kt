@@ -36,7 +36,7 @@ class MemoriaEncoder(private val context: Context) {
             useXNNPACK = true
         }
         imageInterpreter = Interpreter(loadModel("mobileclip_s0_image_v2.tflite"), options)
-        Log.d("MemoriaEncoder", "Image Shape: ${imageInterpreter.getInputTensor(0).shape().joinToString()}")
+
     }
 
     fun initializeTextEncoder() {
@@ -56,29 +56,28 @@ class MemoriaEncoder(private val context: Context) {
         val pixels = IntArray(IMAGE_SIZE * IMAGE_SIZE)
         scaled.getPixels(pixels, 0, IMAGE_SIZE, 0, 0, IMAGE_SIZE, IMAGE_SIZE)
 
-        val mean = floatArrayOf(0.48145467f, 0.4578275f, 0.40821072f)
-        val std  = floatArrayOf(0.26862955f, 0.2613026f, 0.2757771f)
+
 
         val input = ByteBuffer.allocateDirect(1 * 3 * IMAGE_SIZE * IMAGE_SIZE * 4)
             .order(ByteOrder.nativeOrder())
 
 
         for (pixel in pixels) {
-            input.putFloat(((pixel shr 16 and 0xFF) / 255f - mean[0]) / std[0])
+            input.putFloat((pixel shr 16 and 0xFF) / 255f)
         }
-
         for (pixel in pixels) {
-            input.putFloat(((pixel shr 8 and 0xFF) / 255f - mean[1]) / std[1])
+            input.putFloat((pixel shr 8 and 0xFF) / 255f)
         }
-
         for (pixel in pixels) {
-            input.putFloat(((pixel and 0xFF) / 255f - mean[2]) / std[2])
+            input.putFloat((pixel and 0xFF) / 255f)
         }
 
         val output = Array(1) { FloatArray(EMBED_DIM) }
+
         imageInterpreter.run(input, output)
 
         val result = l2Normalize(output[0])
+
 
         return result
     }
@@ -89,9 +88,6 @@ class MemoriaEncoder(private val context: Context) {
 
         var eosPos = tokens.indexOf(49407)
 
-        Log.d("CLIP_DEBUG", "Token IDs: ${tokens.take(10).joinToString()}")
-        Log.d("CLIP_DEBUG", "EOS pos: $eosPos")
-        Log.d("CLIP_DEBUG", "Token 0 embed first 5: ${embeddingTable[tokens[0].toInt()].take(5).joinToString()}")
 
         if (eosPos == -1) eosPos = tokens.indexOf(0)
         if (eosPos == -1) eosPos = 76
@@ -128,10 +124,10 @@ class MemoriaEncoder(private val context: Context) {
         try {
             textInterpreter.runForMultipleInputsOutputs(inputs, outputs)
         } catch (e: Exception) {
-            // next
+            Log.e("MemoriaEncoder", "Text inference failed: ${e.message}", e)
         }
-
-        return l2Normalize(textOutput[0])
+        val result  = l2Normalize(textOutput[0])
+        return result
     }
 
     fun cosineSimilarity(a: FloatArray, b: FloatArray): Float {

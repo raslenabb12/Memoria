@@ -1,10 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.Memoria" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
-        <item name="android:statusBarColor">#222222</item>
+
+
+    <style name="Base.Theme.Memoria" parent="Theme.Material3.Dark.NoActionBar">
+
+
+        <item name="colorPrimary">@color/primary_80</item>
+        <item name="colorOnPrimary">@color/primary_20</item>
+        <item name="colorPrimaryContainer">@color/primary_30</item>
+        <item name="colorOnPrimaryContainer">@color/primary_90</item>
+        <item name="colorPrimaryInverse">@color/primary_40</item>
+
+
+        <item name="colorSecondary">@color/secondary_80</item>
+        <item name="colorOnSecondary">@color/secondary_20</item>
+        <item name="colorSecondaryContainer">@color/secondary_30</item>
+        <item name="colorOnSecondaryContainer">@color/secondary_90</item>
+
+
+        <item name="colorTertiary">@color/tertiary_80</item>
+        <item name="colorOnTertiary">@color/tertiary_20</item>
+        <item name="colorTertiaryContainer">@color/tertiary_30</item>
+        <item name="colorOnTertiaryContainer">@color/tertiary_90</item>
+
+
+        <item name="colorError">@color/error_80</item>
+        <item name="colorOnError">@color/error_20</item>
+        <item name="colorErrorContainer">@color/error_30</item>
+        <item name="colorOnErrorContainer">@color/error_90</item>
+
+
+        <item name="android:colorBackground">@color/neutral_10</item>
+        <item name="colorOnBackground">@color/neutral_90</item>
+        <item name="colorSurface">@color/neutral_10</item>
+        <item name="colorOnSurface">@color/neutral_90</item>
+        <item name="colorSurfaceVariant">@color/neutral_variant_30</item>
+        <item name="colorOnSurfaceVariant">@color/neutral_variant_80</item>
+
+        <item name="colorSurfaceContainerLowest">@color/neutral_4</item>
+        <item name="colorSurfaceContainerLow">@color/neutral_12</item>
+        <item name="colorSurfaceContainer">@color/neutral_17</item>
+        <item name="colorSurfaceContainerHigh">@color/neutral_22</item>
+        <item name="colorSurfaceContainerHighest">@color/neutral_24</item>
+
+
+        <item name="colorOutline">@color/neutral_variant_60</item>
+        <item name="colorOutlineVariant">@color/neutral_variant_30</item>
+
+        <item name="colorSurfaceInverse">@color/neutral_90</item>
+        <item name="colorOnSurfaceInverse">@color/neutral_20</item>
+
+
+        <item name="android:statusBarColor">@color/neutral_10</item>
+        <item name="android:navigationBarColor">@color/neutral_10</item>
+        <item name="android:windowLightStatusBar">false</item>
+
+
+        <item name="textAppearanceHeadlineLarge">@style/TextAppearance.Memoria.HeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/TextAppearance.Memoria.HeadlineMedium</item>
+        <item name="textAppearanceBodyLarge">@style/TextAppearance.Memoria.BodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/TextAppearance.Memoria.BodyMedium</item>
+        <item name="textAppearanceLabelLarge">@style/TextAppearance.Memoria.Label</item>
+        <item name="textAppearanceLabelMedium">@style/TextAppearance.Memoria.Label</item>
+
+
+        <item name="materialButtonStyle">@style/Widget.Memoria.Button.Primary</item>
+        <item name="materialSearchBarStyle">@style/Widget.Memoria.SearchBar</item>
+        <item name="shapeAppearanceCornerExtraLarge">@style/ShapeAppearance.Memoria.Pill</item>
     </style>
 
     <style name="Theme.Memoria" parent="Base.Theme.Memoria" />
+
+
+
+
+    <style name="TextAppearance.Memoria.HeadlineLarge" parent="TextAppearance.Material3.HeadlineLarge">
+        <item name="fontFamily">@font/hanken_grotesk</item>
+        <item name="android:fontFamily">@font/hanken_grotesk</item>
+        <item name="android:textSize">57sp</item>
+        <item name="android:textColor">?attr/colorOnBackground</item>
+    </style>
+
+    <style name="TextAppearance.Memoria.HeadlineMedium" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="fontFamily">@font/hanken_grotesk</item>
+        <item name="android:fontFamily">@font/hanken_grotesk</item>
+        <item name="android:textSize">45sp</item>
+        <item name="android:textColor">?attr/colorOnBackground</item>
+    </style>
+
+    <style name="TextAppearance.Memoria.BodyLarge" parent="TextAppearance.Material3.BodyLarge">
+        <item name="fontFamily">@font/hanken_grotesk</item>
+        <item name="android:fontFamily">@font/hanken_grotesk</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <style name="TextAppearance.Memoria.BodyMedium" parent="TextAppearance.Material3.BodyMedium">
+        <item name="fontFamily">@font/hanken_grotesk</item>
+        <item name="android:fontFamily">@font/hanken_grotesk</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <style name="TextAppearance.Memoria.Label" parent="TextAppearance.Material3.LabelLarge">
+        <item name="fontFamily">@font/jetbrains_mono</item>
+        <item name="android:fontFamily">@font/jetbrains_mono</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:letterSpacing">0.02</item>
+    </style>
+
+
+
+    <style name="ShapeAppearance.Memoria.Pill" parent="ShapeAppearance.Material3.Corner.Full">
+        <item name="cornerSize">50%</item>
+    </style>
+
+
+
+    <style name="Widget.Memoria.Button.Primary" parent="Widget.Material3.Button">
+        <item name="backgroundTint">@color/primary_80</item>
+        <item name="android:textColor">@color/primary_20</item>
+        <item name="cornerRadius">24dp</item>
+        <item name="android:textAppearance">@style/TextAppearance.Memoria.Label</item>
+    </style>
+
+    <style name="Widget.Memoria.Button.Secondary" parent="Widget.Material3.Button">
+        <item name="backgroundTint">@color/neutral_17</item>
+        <item name="android:textColor">@color/neutral_90</item>
+        <item name="cornerRadius">24dp</item>
+        <item name="android:textAppearance">@style/TextAppearance.Memoria.Label</item>
+    </style>
+
+    <style name="Widget.Memoria.Button.Inverted" parent="Widget.Material3.Button">
+        <item name="backgroundTint">@color/neutral_90</item>
+        <item name="android:textColor">@color/neutral_20</item>
+        <item name="cornerRadius">24dp</item>
+        <item name="android:textAppearance">@style/TextAppearance.Memoria.Label</item>
+    </style>
+
+    <style name="Widget.Memoria.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="strokeColor">@color/neutral_variant_60</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="android:textColor">@color/neutral_90</item>
+        <item name="cornerRadius">24dp</item>
+        <item name="android:textAppearance">@style/TextAppearance.Memoria.Label</item>
+    </style>
+
+
+    <style name="Widget.Memoria.SearchBar" parent="Widget.Material3.SearchBar">
+        <item name="backgroundTint">@color/neutral_17</item>
+        <item name="android:textColorHint">@color/neutral_variant_60</item>
+        <item name="hintTextColor">@color/neutral_variant_60</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Memoria.Pill</item>
+    </style>
+
+
+
+    <style name="Widget.Memoria.IconButton.Filled" parent="Widget.Material3.Button.IconButton.Filled">
+        <item name="backgroundTint">@color/neutral_17</item>
+        <item name="iconTint">@color/primary_80</item>
+    </style>
+
+    <style name="Widget.Memoria.IconButton.Filled.Accent" parent="Widget.Memoria.IconButton.Filled">
+        <item name="backgroundTint">@color/tertiary_80</item>
+        <item name="iconTint">@color/tertiary_20</item>
+    </style>
+
 </resources>

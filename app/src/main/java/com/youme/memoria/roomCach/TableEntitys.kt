@@ -10,6 +10,8 @@ import java.nio.ByteOrder
 data class PhotoEntity(
     @PrimaryKey() val uri: String,
     @ColumnInfo(name = "embedding") val embedding: ByteArray,
+    val width: Int,
+    val height: Int
 )
 fun FloatArray.toByteArray(): ByteArray {
     val buf = ByteBuffer.allocate(size * 4).order(ByteOrder.LITTLE_ENDIAN)

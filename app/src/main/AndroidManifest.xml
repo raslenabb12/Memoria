@@ -23,6 +23,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".search.searchActivity" android:exported="false"/>
+        <activity android:name=".imageViewer.imageViewerActivity" android:exported="false"/>
     </application>
 
 </manifest>
