@@ -119,7 +119,13 @@ class settings : Fragment(R.layout.settings_layout) {
                     is IndexingViewModel.IndexingState.Idle->{
                         statusLog.text = "Status: Idle"
                     }
-                    else -> {}
+                    is IndexingViewModel.IndexingState.Completed ->{
+                        pauseBt.isEnabled=false
+                        resumeBt.isEnabled=false
+                        etaLog.isVisible=false
+                        statusLog.text="Status: Completed"
+                        progressLog.text="${state.total}/${state.total}"
+                    }
                 }
             }
         }

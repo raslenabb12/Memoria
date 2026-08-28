@@ -198,6 +198,11 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
                         progressbar.max = state.total
                         progressbar.progress = state.processed
                     }
+                    is IndexingViewModel.IndexingState.Completed ->{
+                        processButton.isVisible=false
+                        logText.text = "Indexing completed: ${state.total}"
+                        progressbar.isVisible=false
+                    }
                     else -> {}
                 }
             }

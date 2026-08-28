@@ -172,7 +172,7 @@ class IndexingViewModel(
 
                     val endTime = System.currentTimeMillis()
 
-                    val etaMs = (endTime - startTime).toFloat() * (imglist.size - index - 1)
+                    val etaMs = (endTime - startTime).toFloat() * (toProcess.size - index - 1)
                     val etaMin = (etaMs / 1000f) / 60
 
 
@@ -187,6 +187,7 @@ class IndexingViewModel(
                 _state.value = IndexingState.Ready(processedSize , imglist.size)
 
             } catch (e: Exception) {
+                Log.e("Indexing", "Fatal error during indexing", e)
 
             }finally {
                 repo.unloadModel()
