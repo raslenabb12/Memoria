@@ -176,7 +176,7 @@ class searchActivity : AppCompatActivity() {
                             } catch (e: Exception) {
                                 ""
                             }
-                            Adapter.submitData(PagingData.from(mappedList))
+                            Adapter.submitData(lifecycle,PagingData.from(mappedList))
 
                         }
                         is SearchState.Error -> {
@@ -186,7 +186,10 @@ class searchActivity : AppCompatActivity() {
                 }
         }
         Adapter.addOnPagesUpdatedListener {
-            recyclerView.scrollToPosition(0)
+            recyclerView.post {
+                recyclerView.scrollToPosition(0)
+            }
+
         }
 
 
