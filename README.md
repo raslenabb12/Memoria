@@ -115,8 +115,8 @@ Then open in Android Studio and run.
 ## Roadmap
 
 - [ ] Folder selection (index only chosen folders instead of the full library)
-- [ ] Search filters — date range, folder, camera make/model
-- [ ] Settings screen (indexed folders, storage info, theme)
+- [x] Search filters — date range, folder, camera make/model
+- [x] Settings screen (indexed folders, storage info, theme)
 - [ ] First-run onboarding flow
 
 ---
