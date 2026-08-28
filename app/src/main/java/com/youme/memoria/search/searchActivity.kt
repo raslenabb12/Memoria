@@ -162,7 +162,6 @@ class searchActivity : AppCompatActivity() {
         val searchInput = findViewById<TextInputEditText>(R.id.textedit)
         val progressbar = findViewById<ProgressBar>(R.id.progressBar3)
         lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
                 searchViewModuel.results.collectLatest { state ->
                     when (state) {
                         is SearchState.Loading -> progressbar.isVisible = true
@@ -177,7 +176,7 @@ class searchActivity : AppCompatActivity() {
                             } catch (e: Exception) {
                                 ""
                             }
-                            Adapter.submitData(lifecycle,PagingData.from(mappedList))
+                            Adapter.submitData(PagingData.from(mappedList))
 
                         }
                         is SearchState.Error -> {
@@ -185,20 +184,15 @@ class searchActivity : AppCompatActivity() {
                         }
                     }
                 }
-            }
-
         }
         Adapter.addOnPagesUpdatedListener {
-            recyclerView.post {
-                recyclerView.scrollToPosition(0)
-            }
+            recyclerView.scrollToPosition(0)
         }
 
 
         searchInput.setOnEditorActionListener { v, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 searchViewModuel.setSearchQuery(searchInput.text.toString())
-
                 true
             } else false
         }
