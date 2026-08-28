@@ -20,6 +20,7 @@ import com.youme.memoria.Gallery.GalleryRepository
 import com.youme.memoria.Gallery.GalleryViewModel
 import com.youme.memoria.R
 import com.youme.memoria.search.SearchResultCache
+import com.youme.memoria.search.searchActivity
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -33,6 +34,7 @@ class imageViewerActivity : AppCompatActivity(){
         findViewById<ImageButton>(R.id.imageButton2).setOnClickListener {
             finishAfterTransition()
         }
+
 
         setupViewPager()
         setupUi()
@@ -58,6 +60,11 @@ class imageViewerActivity : AppCompatActivity(){
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
 
+            startActivity(intent)
+        }
+        findViewById<ImageButton>(R.id.imageButton7).setOnClickListener {
+            val intent = Intent(this@imageViewerActivity, searchActivity::class.java)
+            intent.putExtra("uri",Adatper.peek(viewpager2.currentItem)?.uri.toString())
             startActivity(intent)
         }
 

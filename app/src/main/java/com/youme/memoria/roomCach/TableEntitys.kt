@@ -11,7 +11,11 @@ data class PhotoEntity(
     @PrimaryKey() val uri: String,
     @ColumnInfo(name = "embedding") val embedding: ByteArray,
     val width: Int,
-    val height: Int
+    val height: Int,
+    val dateTaken: Long? = 0,
+    val folderPath: String? = "",
+    val cameraMake: String? = null,
+    val cameraModel: String? = null
 )
 fun FloatArray.toByteArray(): ByteArray {
     val buf = ByteBuffer.allocate(size * 4).order(ByteOrder.LITTLE_ENDIAN)

@@ -25,6 +25,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
@@ -53,7 +54,13 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
     private lateinit var observer: GalleryObserver
     private  var imageEncodingJob: Job?=null
     private val imglist = mutableListOf<Uri>()
+
+    private val indexingViewModel: IndexingViewModel by activityViewModels {
+        IndexingViewModelFactory(repo, requireContext().applicationContext)
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+
         super.onViewCreated(view, savedInstanceState)
         repo = PhotoRepository(requireContext())
 
@@ -94,6 +101,7 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
 
         lifecycleScope.launch {
             requestGalleryPermission()
+            indexinState()
 
         }
         navigateToSearch()
@@ -115,7 +123,7 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
         ) { isGranted ->
             if (isGranted) {
                 lifecycleScope.launch {
-                    scanGallery()
+                    if (indexingViewModel.imglist.isEmpty()) indexingViewModel.scanGallery()
                     loadGallery()
                 }
             } else {
@@ -138,7 +146,7 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
                 permission
             ) == PackageManager.PERMISSION_GRANTED -> {
                 lifecycleScope.launch {
-                    scanGallery()
+                    if (indexingViewModel.imglist.isEmpty()) indexingViewModel.scanGallery()
                     loadGallery()
                 }
             }
@@ -149,56 +157,59 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
             }
         }
     }
-    suspend fun scanGallery() {
-        val projection = arrayOf(
-            MediaStore.Images.Media._ID,
-            MediaStore.Images.Media.DISPLAY_NAME,
-            MediaStore.Images.Media.DATE_ADDED
-        )
+    private fun indexinState(){
 
-        val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
+        val logText = requireView().findViewById<TextView>(R.id.textView2)
+        val processButton = requireView().findViewById<Button>(R.id.button)
+        val progressbar  = requireView().findViewById<ProgressBar>(R.id.progressBar)
 
-        requireContext().contentResolver.query(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            projection,
-            null,
-            null,
-            sortOrder
-        )?.use { cursor ->
 
-            val idCol =
-                cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+        lifecycleScope.launch {
+            indexingViewModel.state.collectLatest {state->
+                when(state){
+                    is IndexingViewModel.IndexingState.Ready -> {
+                        processButton.text="Start"
+                        logText.text = "Indexed : ${state.processed}/${state.total}"
+                        progressbar.isVisible=false
+                        processButton.isVisible=true
 
-            val nameCol =
-                cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
+                        processButton.setOnClickListener {
+                            indexingViewModel.startIndexing()
+                            logText.text="Loading"
+                            progressbar.isIndeterminate=true
+                        }
 
-            while (cursor.moveToNext()) {
+                    }
+                    is IndexingViewModel.IndexingState.Running ->{
+                        logText.text = "Indexing: ${state.processed}/${state.total} ETA: ${"%.1f".format(state.etaMinutes)}Min"
 
-                val id = cursor.getLong(idCol)
-                val name = cursor.getString(nameCol)
 
-                val uri = ContentUris.withAppendedId(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    id
-                )
-                imglist.add(uri)
+                        processButton.text="Pause"
+                        processButton.isVisible=true
+                        processButton.setOnClickListener {
+                            indexingViewModel.pause()
+                            logText.text = "Indexed : ${state.processed}/${state.total}"
+                        }
 
+                        progressbar.isVisible=true
+                        progressbar.isIndeterminate=false
+
+
+                        progressbar.max = state.total
+                        progressbar.progress = state.processed
+                    }
+                    else -> {}
+                }
             }
         }
-        encodeImages()
 
 
-        withContext(Dispatchers.Main){
-            //viewModel.loadImages(requireContext(),imglist)
-        }
     }
+
     private fun navigateToSearch(){
         val searchButton =  requireView().findViewById<CardView>(R.id.searchButton)
         searchButton.setOnClickListener {
-
-            if (imageEncodingJob?.isActive == true) {
-                imageEncodingJob?.cancel()
-            }
+            indexingViewModel.pause()
 
             val intent = Intent(requireContext(), searchActivity::class.java)
             val options = ActivityOptionsCompat.makeSceneTransitionAnimation(
@@ -208,133 +219,6 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
             )
 
             startActivity(intent,options.toBundle())
-        }
-    }
-
-    private fun encodeImages() {
-        val logText = requireView().findViewById<TextView>(R.id.textView2)
-        val processButton = requireView().findViewById<Button>(R.id.button)
-        val progressbar  = requireView().findViewById<ProgressBar>(R.id.progressBar)
-        lifecycleScope.launch {
-            val alreadyExists = repo.alreadyExistsList().map { it.uri.toUri() }.toMutableList()
-            val toProcess = imglist.filter { !alreadyExists.contains(it) }
-
-            var processedSize = alreadyExists.size
-
-            if (toProcess.isEmpty()) {
-                logText.text = "All ${imglist.size} images indexed "
-                processButton.isVisible = false
-                progressbar.isVisible = false
-                return@launch
-            }
-
-            logText.text = "Indexed: ${alreadyExists.size}/${imglist.size}"
-            processButton.isVisible=true
-            progressbar.isVisible=false
-
-            processButton.setOnClickListener {
-                if (toProcess.isEmpty()) return@setOnClickListener
-
-                if (imageEncodingJob?.isActive == true) {
-                    imageEncodingJob?.cancel()
-                    return@setOnClickListener
-                }
-
-                imageEncodingJob = lifecycleScope.launch {
-                    try {
-                        processButton.text = "Pause"
-                        processButton.isEnabled = false
-
-                        logText.text = "Initializing AI model..."
-                        progressbar.isVisible = true
-                        progressbar.isIndeterminate = true
-
-
-                        repo.initializeImageModel()
-
-                        ensureActive()
-
-                        progressbar.isIndeterminate = false
-                        progressbar.max = toProcess.size
-                        progressbar.progress = processedSize
-
-                        processButton.isEnabled = true
-
-                        toProcess.forEachIndexed { index, uri ->
-
-                            ensureActive()
-                            val startTime = System.currentTimeMillis()
-
-                            try {
-                                val encodedImage =
-                                    repo.encodeImage(requireContext(), uri)
-                                val sizeData = ImageSizeUtil.getImageDimensions(requireContext(),uri)
-                                repo.saveEmbedding(
-                                    uri.toString(),
-                                    encodedImage,
-                                    sizeData?.second?:0,
-                                    sizeData?.first?:0
-                                )
-                                alreadyExists.add(uri)
-
-                            } catch (e: CancellationException) {
-                                throw e
-
-                            } catch (e: Exception) {
-                                Log.e("ImageEncoding", "Failed: $uri", e)
-                            }
-
-
-                            val endTime = System.currentTimeMillis()
-
-                            val etaMs = (endTime - startTime).toFloat() * (imglist.size - index - 1)
-                            val etaMin = (etaMs / 1000f) / 60
-
-                            processedSize++
-
-                            logText.text = "Indexing: $processedSize/${toProcess.size} ETA: ${"%.1f".format(etaMin)}Min"
-
-                            progressbar.progress = processedSize
-                        }
-
-                        logText.text = "Indexing completed ($processedSize / ${imglist.size})"
-                        if (alreadyExists.size == imglist.size){
-                            processButton.isVisible=false
-                        }
-                        processButton.text = "Start"
-
-                    } catch (e: CancellationException) {
-
-                        logText.text = "Cancelled"
-
-                        processButton.text = "Start"
-                        processButton.isEnabled=false
-
-                    } catch (e: Exception) {
-                        Log.e("ImageEncoding", "Encoding failed", e)
-
-                        logText.text =
-                            "Failed to initialize image encoder: ${e.message}"
-
-                        processButton.text = "Start"
-                    } finally {
-                        lifecycleScope.launch {
-                            logText.text = "Releasing resources..."
-
-
-                            repo.unloadModel()
-
-
-                            logText.text =  "Indexed: ${processedSize}/${imglist.size}"
-                        }
-
-
-                        progressbar.isVisible = false
-                        processButton.isEnabled = true
-                    }
-                }
-            }
-
         }
     }
     private fun formatEta(etaMs: Long): String {

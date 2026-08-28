@@ -7,13 +7,24 @@ import android.net.Uri
 import android.util.Log
 import androidx.core.net.toUri
 import androidx.room.Query
+import com.youme.inkdex.roomCach.FolderCount
 import com.youme.inkdex.roomCach.PhotoEntity
 import com.youme.inkdex.roomCach.PhotosDatabase
 import com.youme.inkdex.roomCach.toByteArray
 import com.youme.inkdex.roomCach.toFloatArray
 import com.youme.memoria.Encoder.MemoriaEncoder
+import com.youme.memoria.ImageLoading.ImageUriItem
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+
+data class SearchFilters(
+    val startDate: Long?,
+    val endDate: Long?,
+    val folders: List<String>,
+    val camera: String?
+)
 
 class PhotoRepository(context: Context) {
 
@@ -21,13 +32,15 @@ class PhotoRepository(context: Context) {
     private val memoriaEncoder = MemoriaEncoder(context)
 
     suspend fun getCountPhotos() = dao.count()
-     var initializeedTextModel  = false
-
     suspend fun initializeImageModel() {
         withContext(Dispatchers.IO){
             memoriaEncoder.initializeImageEncoder()
         }
     }
+
+    private val initMutex = Mutex()
+    @Volatile var initializeedTextModel = false
+        private set
     suspend fun initializeTextModel() {
         if (initializeedTextModel) return
         withContext(Dispatchers.IO){
@@ -35,16 +48,37 @@ class PhotoRepository(context: Context) {
             initializeedTextModel = true
         }
     }
+    suspend fun ensureTextModelInitialized() {
+        if (initializeedTextModel) return
+        initMutex.withLock {
+            if (initializeedTextModel) return
+            initializeTextModel()
+            initializeedTextModel = true
+        }
+    }
+    suspend fun getFoldersList(): List<FolderCount> = dao.getAvailableFolders()
+
+    suspend fun getCameraList() = dao.getAvailableCameras()
+
+
     suspend fun alreadyExistsList() = dao.getAll()
+
+    suspend fun indexedImagesFiltered(searchFilters :SearchFilters ) =  dao.getFiltered(
+        searchFilters.startDate,
+        searchFilters.endDate,
+        searchFilters.folders,
+        searchFilters.camera,
+        foldersEmpty = searchFilters.folders.isEmpty()
+    )
 
     suspend fun encodeImage(context : Context,image: Uri) : FloatArray {
         return withContext(Dispatchers.IO){ memoriaEncoder.encodeImage(uriToBitmap(context,image)) }
     }
 
-    suspend fun search(query: String) : List<Pair<PhotoEntity,Float>>{
+    suspend fun search(query: String,indexedImages : List<PhotoEntity>) : List<Pair<PhotoEntity,Float>>{
         return withContext(Dispatchers.IO){
             val encodedText = memoriaEncoder.encodeText(query)
-            val allPhotos = dao.getAll()
+            val allPhotos = indexedImages
 
             allPhotos.map { photo->
                 val score  = memoriaEncoder.cosineSimilarity(encodedText,photo.embedding.toFloatArray())
@@ -53,10 +87,31 @@ class PhotoRepository(context: Context) {
 
         }
     }
+    suspend fun searchByImage(context : Context,image: Uri,indexedImages : List<PhotoEntity>) : List<Pair<PhotoEntity,Float>>{
+        return withContext(Dispatchers.IO){
+            memoriaEncoder.initializeImageEncoder()
+            val encodedImage= memoriaEncoder.encodeImage(uriToBitmap(context,image))
+            val allPhotos = indexedImages
 
-    suspend fun saveEmbedding(uri: String, embedding: FloatArray,height: Int,width : Int) {
+            allPhotos.map { photo->
+                val score  = memoriaEncoder.cosineSimilarity(encodedImage,photo.embedding.toFloatArray())
+                photo to score
+            }.sortedByDescending { it.second }
+        }
+    }
+
+    suspend fun saveEmbedding(uri: String, embedding: FloatArray,height: Int,width : Int,
+                              dateTaken: Long?,
+                              folderPath: String?,
+                              cameraMake: String?,
+                              cameraModel: String?) {
         if (alreadyExists(uri)) return
-        dao.insert(PhotoEntity(uri = uri, embedding = embedding.toByteArray(),width,height))
+        dao.insert(PhotoEntity(
+            uri = uri, embedding = embedding.toByteArray(),
+            width = width, height = height,
+            dateTaken = dateTaken, folderPath = folderPath,
+            cameraMake = cameraMake, cameraModel = cameraModel
+        ))
     }
     suspend fun alreadyExists(uri: String): Boolean = dao.existsByUri(uri)!=null
 

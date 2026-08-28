@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/photos"
+        android:icon="@drawable/outline_photo_library_24"
+        android:title="Photos" />
+    <item
+        android:id="@+id/settings"
+        android:icon="@drawable/outline_settings_24"
+        android:title="Settings" />
+</menu>

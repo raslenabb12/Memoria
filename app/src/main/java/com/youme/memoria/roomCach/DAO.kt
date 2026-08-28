@@ -33,4 +33,38 @@ interface PhotoDao {
     @Query("select * from photo where uri =:uri limit 1")
     suspend fun existsByUri(uri : String) :PhotoEntity?
 
+    @Query("""
+    SELECT DISTINCT folderPath,COUNT(*) AS count FROM photo
+    WHERE folderPath != '' 
+    group by folderPath
+   
+    ORDER BY folderPath ASC
+""")
+    suspend fun getAvailableFolders(): List<FolderCount>
+
+    @Query("""
+    SELECT DISTINCT cameraMake || ' ' || cameraModel AS camera FROM photo 
+    WHERE cameraMake IS NOT NULL AND cameraModel IS NOT NULL 
+    ORDER BY camera ASC
+""")
+    suspend fun getAvailableCameras(): List<String>
+    @Query("""
+    SELECT * FROM photo 
+    WHERE (:startDate IS NULL OR dateTaken >= :startDate)
+    AND (:endDate IS NULL OR dateTaken <= :endDate)
+    AND (:foldersEmpty = 1 OR folderPath IN (:folders))
+    AND (:camera IS NULL OR cameraModel = :camera)
+""")
+    suspend fun getFiltered(
+        startDate: Long?,
+        endDate: Long?,
+        folders: List<String>,
+        camera: String?,
+        foldersEmpty: Boolean
+    ): List<PhotoEntity>
+
 }
+data class FolderCount(
+    val folderPath: String,
+    val count: Long
+)
