@@ -43,9 +43,13 @@ You type:  "my dog with a hat"          You show a photo of a chair
 
 ## Screenshots
 
-| <img src="images/app_pic_1.jpg" alt="Search results grid" width="250"/> | <img src="images/app_pic_2.jpg" alt="Photo viewer" width="250"/> | <img src="images/app_pic_3.jpg" alt="Indexing progress" width="250"/> |
+| <img src="images/pic_1.jpg" alt="Search results grid" width="250"/> | <img src="images/pic_3.jpg" alt="Photo viewer" width="250"/> | <img src="images/pic_6.jpg" alt="Indexing progress" width="250"/> |
 |:---:|:---:|:---:|
 | Non-blocking indexing progress | Search results | Full-screen photo viewer |
+
+| <img src="images/pic_2.jpg" alt="Search results grid" width="250"/> | <img src="images/pic_4.jpg" alt="Photo viewer" width="250"/> | <img src="images/pic_5.jpg" alt="Indexing progress" width="250"/> |
+|:---:|:---:|:---:|
+| Settings | Search by Image | Filters |
 
 ---
 
