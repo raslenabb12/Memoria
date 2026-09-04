@@ -27,8 +27,14 @@ import androidx.paging.PagingData
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.bumptech.glide.Glide
+import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
+import com.google.android.material.loadingindicator.LoadingIndicator
+import com.google.android.material.progressindicator.LinearProgressIndicator
+import com.google.android.material.search.SearchBar
+import com.google.android.material.search.SearchView
 import com.google.android.material.textfield.TextInputEditText
 import com.youme.memoria.ImageLoading.ImagePagingAdapter
 import com.youme.memoria.ImageLoading.ImageUriItem
@@ -55,7 +61,7 @@ class searchActivity : AppCompatActivity() {
 
             intent.putExtra("pos",position)
             intent.putExtra("from_search",true)
-            intent.putExtra("matchContext",findViewById<TextInputEditText>(R.id.textedit).text.toString())
+            //intent.putExtra("matchContext",findViewById<TextInputEditText>(R.id.textedit).text.toString())
 
 
             startActivity(intent)
@@ -82,17 +88,11 @@ class searchActivity : AppCompatActivity() {
             adapter = Adapter
         }
 
-        val backButton = findViewById<ImageButton>(R.id.imageButton)
-        backButton.setOnClickListener {
-            finishAfterTransition()
-        }
         setupSearch()
-        val filterButton = findViewById<ImageButton>(R.id.imageButton3)
-        filterButton.setOnClickListener {
-            FilterBottomFrag().show(supportFragmentManager,"")
-        }
+
         setupFilterObserver()
         setupImageSearch()
+        setupTopBar()
 
     }
 
@@ -118,19 +118,9 @@ class searchActivity : AppCompatActivity() {
         }
     }
     private fun setupImageSearch() {
-        val addImageBut = findViewById<ImageButton>(R.id.imageButton4)
         val container = findViewById<LinearLayout>(R.id.linearLayout2)
-        val searchToolBar = findViewById<LinearLayout>(R.id.searchToolBar)
-        val pickedImage = registerForActivityResult(
-            ActivityResultContracts.PickVisualMedia()
-        ) { uri ->
-            if (uri != null) {
-                searchViewModuel.setSearchImage(uri)
-            }
-        }
-        addImageBut.setOnClickListener {
-            pickedImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-        }
+        val searchToolBar = findViewById<AppBarLayout>(R.id.app_bar_layout)
+
         lifecycleScope.launch {
             searchViewModuel.searchImage.collectLatest { image ->
                 image?.let {
@@ -157,11 +147,38 @@ class searchActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupTopBar(){
+        val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
+        toolbar.setNavigationOnClickListener { finishAfterTransition() }
+        val pickedImage = registerForActivityResult(
+            ActivityResultContracts.PickVisualMedia()
+        ) { uri ->
+            if (uri != null) {
+                searchViewModuel.setSearchImage(uri)
+            }
+        }
+
+        toolbar.setOnMenuItemClickListener { item ->
+            when(item.itemId){
+                R.id.image_search->{ pickedImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))}
+                R.id.filter->{FilterBottomFrag().show(supportFragmentManager,"") }
+                else -> false
+            }
+            true
+        }
+    }
+
     private fun setupSearch(){
         val recyclerView = findViewById<RecyclerView>(R.id.rec)
-        val searchInput = findViewById<TextInputEditText>(R.id.textedit)
-        val progressbar = findViewById<ProgressBar>(R.id.progressBar3)
+        val searchBar = findViewById<SearchBar>(R.id.search_bar)
+        val searchView = findViewById<SearchView>(R.id.search_view)
+        val progressbar = findViewById<LoadingIndicator>(R.id.loading)
+
+        searchView.setupWithSearchBar(searchBar)
+
+
         lifecycleScope.launch {
+            progressbar.isVisible=false
                 searchViewModuel.results.collectLatest { state ->
                     when (state) {
                         is SearchState.Loading -> progressbar.isVisible = true
@@ -193,9 +210,11 @@ class searchActivity : AppCompatActivity() {
         }
 
 
-        searchInput.setOnEditorActionListener { v, actionId, event ->
+        searchView.getEditText().setOnEditorActionListener { v, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                searchViewModuel.setSearchQuery(searchInput.text.toString())
+                searchViewModuel.setSearchQuery(searchView.getEditText().text.toString())
+                searchBar.setText(searchView.getEditText().text.toString())
+                searchView.hide()
                 true
             } else false
         }

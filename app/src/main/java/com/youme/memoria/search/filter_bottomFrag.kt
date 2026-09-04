@@ -145,22 +145,22 @@ class FilterBottomFrag(): BottomSheetDialogFragment(R.layout.filter_layout) {
         val year = calendar.get(Calendar.YEAR)
         return "$month/$day/$year"
     }
-    private suspend fun camerasList(){
-        val allCameras  = repo.getCameraList()
-        val camerasContainer = requireView().findViewById<ChipGroup>(R.id.camera_container)
-
-        camerasContainer.removeAllViews()
-
-        allCameras.forEach { camera->
-            val chip = Chip(requireContext()).apply {
-                text=camera
-                isCheckable=true
-            }
-            camerasContainer.addView(chip)
-
-
-        }
-    }
+//    private suspend fun camerasList(){
+//        val allCameras  = repo.getCameraList()
+//        val camerasContainer = requireView().findViewById<ChipGroup>(R.id.camera_container)
+//
+//        camerasContainer.removeAllViews()
+//
+//        allCameras.forEach { camera->
+//            val chip = Chip(requireContext()).apply {
+//                text=camera
+//                isCheckable=true
+//            }
+//            camerasContainer.addView(chip)
+//
+//
+//        }
+//    }
     private suspend fun setupFolders(){
         val folders = repo.getFoldersList().map { it.folderPath to it.count }.distinct().filter { !it.first.trimEnd('/').isEmpty() }
         val foldersContainter = requireView().findViewById<LinearLayout>(R.id.folders_container)

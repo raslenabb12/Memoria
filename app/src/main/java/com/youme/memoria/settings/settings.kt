@@ -26,6 +26,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlin.getValue
 import androidx.core.net.toUri
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.progressindicator.LinearProgressIndicator
 
 class settings : Fragment(R.layout.settings_layout) {
     private lateinit var repo: PhotoRepository
@@ -70,12 +72,12 @@ class settings : Fragment(R.layout.settings_layout) {
     }
     private fun setupIndexingUi(){
         val progressLog = requireView().findViewById<TextView>(R.id.textView7)
-        val progressBar = requireView().findViewById<ProgressBar>(R.id.progressBar2)
+        val progressBar = requireView().findViewById<LinearProgressIndicator>(R.id.progressBar2)
         val statusLog = requireView().findViewById<TextView>(R.id.textView6)
         val etaLog = requireView().findViewById<TextView>(R.id.textView5)
 
-        val pauseBt = requireView().findViewById<Button>(R.id.button3)
-        val resumeBt = requireView().findViewById<Button>(R.id.button4)
+        val pauseBt = requireView().findViewById<MaterialButton>(R.id.button3)
+        val resumeBt = requireView().findViewById<MaterialButton>(R.id.button4)
         lifecycleScope.launch {
             indexingViewModel.state.collectLatest {state ->
 

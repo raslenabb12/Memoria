@@ -30,6 +30,9 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.youme.memoria.ImageLoading.ImagePagingAdapter
 import com.youme.memoria.ImageSizeUtil
 import com.youme.memoria.PhotoRepository
@@ -160,15 +163,15 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
     private fun indexinState(){
 
         val logText = requireView().findViewById<TextView>(R.id.textView2)
-        val processButton = requireView().findViewById<Button>(R.id.button)
-        val progressbar  = requireView().findViewById<ProgressBar>(R.id.progressBar)
+        val processButton = requireView().findViewById<MaterialButton>(R.id.button)
+        val progressbar  = requireView().findViewById<LinearProgressIndicator>(R.id.progressbar)
 
 
         lifecycleScope.launch {
             indexingViewModel.state.collectLatest {state->
                 when(state){
                     is IndexingViewModel.IndexingState.Ready -> {
-                        processButton.text="Start"
+                        processButton.setIconResource(R.drawable.baseline_play_arrow_24)
                         logText.text = "Indexed : ${state.processed}/${state.total}"
                         progressbar.isVisible=false
                         processButton.isVisible=true
@@ -181,10 +184,10 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
 
                     }
                     is IndexingViewModel.IndexingState.Running ->{
-                        logText.text = "Indexing: ${state.processed}/${state.total} ETA: ${"%.1f".format(state.etaMinutes)}Min"
+                        logText.text = "Indexing: ${state.processed}/${state.total}"
 
 
-                        processButton.text="Pause"
+                        processButton.setIconResource(R.drawable.baseline_pause_24)
                         processButton.isVisible=true
                         processButton.setOnClickListener {
                             indexingViewModel.pause()
@@ -212,18 +215,17 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
     }
 
     private fun navigateToSearch(){
-        val searchButton =  requireView().findViewById<CardView>(R.id.searchButton)
-        searchButton.setOnClickListener {
-            indexingViewModel.pause()
+        val toolbar = requireView().findViewById<MaterialToolbar>(R.id.toolbar)
+        toolbar.setOnMenuItemClickListener { item ->
+            when(item.itemId){
+                R.id.search->{
+                    indexingViewModel.pause()
+                    val intent = Intent(requireContext(), searchActivity::class.java)
+                    startActivity(intent)
+                }
+            }
+            true
 
-            val intent = Intent(requireContext(), searchActivity::class.java)
-            val options = ActivityOptionsCompat.makeSceneTransitionAnimation(
-                requireActivity(),
-                searchButton,
-                "search_transition"
-            )
-
-            startActivity(intent,options.toBundle())
         }
     }
     private fun formatEta(etaMs: Long): String {

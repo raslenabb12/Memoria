@@ -10,93 +10,59 @@
         android:id="@+id/linearLayout2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <LinearLayout
-            android:id="@+id/searchToolBar"
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/app_bar_layout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            android:layout_height="wrap_content"
+            android:fitsSystemWindows="true"
+            app:materialThemeOverlay="@style/ThemeOverlay.Material3Expressive.AppBarWithSearch"
+            app:statusBarForeground="?attr/colorSurface">
 
-            <ImageButton
-                android:id="@+id/imageButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:backgroundTint="@android:color/transparent"
-                app:srcCompat="@drawable/baseline_arrow_back_24" />
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/textInputLayout2"
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbar"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:layout_weight="1"
-                android:transitionName="search_transition"
-                app:boxCornerRadiusBottomEnd="40dp"
-                app:boxCornerRadiusBottomStart="40dp"
-                app:boxCornerRadiusTopEnd="40dp"
-                app:boxCornerRadiusTopStart="40dp"
-                app:endIconMode="clear_text"
-                app:startIconDrawable="@drawable/baseline_search_24">
+                android:layout_height="wrap_content"
+                app:layout_scrollFlags="enterAlways|scroll|snap"
+                app:menu="@menu/search_menu"
+                app:navigationIcon="@drawable/baseline_arrow_back_24">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/textedit"
+                <com.google.android.material.search.SearchBar
+                    android:id="@+id/search_bar"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:fontFamily="@font/hanken_grotesk"
                     android:hint="Search"
-                    android:imeOptions="actionSearch"
-                    android:inputType="text|textNoSuggestions"
-                    android:paddingTop="12dp"
-                    android:paddingBottom="12dp"
-                    android:singleLine="true" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <ImageButton
-                android:id="@+id/imageButton4"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:backgroundTint="@android:color/transparent"
-                app:srcCompat="@drawable/baseline_add_a_photo_24" />
-
-            <ImageButton
-                android:id="@+id/imageButton3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:backgroundTint="@android:color/transparent"
-                app:srcCompat="@drawable/baseline_filter_list_24" />
-        </LinearLayout>
-
+                    android:minHeight="45dp"
+                    app:maxButtonHeight="45dp"
+                    app:navigationIcon="@drawable/baseline_search_24"></com.google.android.material.search.SearchBar>
+            </com.google.android.material.appbar.MaterialToolbar>
+        </com.google.android.material.appbar.AppBarLayout>
     </LinearLayout>
 
-    <ProgressBar
-        android:id="@+id/progressBar3"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="0dp"
+    <com.google.android.material.loadingindicator.LoadingIndicator
+        android:id="@+id/loading"
+        style="@style/Widget.Material3.LoadingIndicator.Contained"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:indeterminate="true"
+        android:layout_marginTop="8dp"
+        android:elevation="20dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout2" />
+        app:layout_constraintTop_toTopOf="@+id/rec" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rec"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
+        android:elevation="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/progressBar3" />
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout2" />
 
     <ScrollView
         android:id="@+id/scrollView2"
@@ -104,8 +70,7 @@
         android:layout_height="wrap_content"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/progressBar3">
+        app:layout_constraintStart_toStartOf="parent">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -120,5 +85,21 @@
                 app:singleLine="true" />
         </LinearLayout>
     </ScrollView>
+
+    <com.google.android.material.search.SearchView
+        android:id="@+id/search_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:elevation="15dp"
+        android:imeOptions="actionGo"
+        app:layout_anchor="@id/search_bar"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- Search suggestions/results go here (ScrollView, RecyclerView, etc.). -->
+
+    </com.google.android.material.search.SearchView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
