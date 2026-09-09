@@ -13,15 +13,21 @@ import java.nio.channels.FileChannel
 import kotlin.math.pow
 import kotlin.math.sqrt
 import androidx.core.graphics.scale
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlin.math.roundToInt
 
 class MemoriaEncoder(private val context: Context) {
     private var imageNnDelegate: NnApiDelegate? = null
     private var textNnDelegate: NnApiDelegate? = null
 
+    private lateinit var embeddingBuffer: MappedByteBuffer
+
+
     private lateinit var imageInterpreter: Interpreter
     private lateinit var textInterpreter: Interpreter
     private lateinit var embeddingTable: Array<FloatArray>
+    private val imageMutex = Mutex()
 
     companion object {
         const val IMAGE_SIZE = 256
@@ -34,6 +40,12 @@ class MemoriaEncoder(private val context: Context) {
         val options = Interpreter.Options().apply {
             numThreads = 4
             useXNNPACK = true
+            try {
+                imageNnDelegate = NnApiDelegate()
+                addDelegate(imageNnDelegate)
+            } catch (e: Exception) {
+                "test"
+            }
         }
         imageInterpreter = Interpreter(loadModel("mobileclip_s0_image_v2.tflite"), options)
 
@@ -49,39 +61,42 @@ class MemoriaEncoder(private val context: Context) {
         loadEmbeddingTable()
         CLIPTokenizer.init(context)
     }
+    private val imageInputBuffer: ByteBuffer by lazy {
+        ByteBuffer.allocateDirect(1 * 3 * IMAGE_SIZE * IMAGE_SIZE * 4).order(ByteOrder.nativeOrder())
+    }
 
-    fun encodeImage(bitmap: Bitmap): FloatArray {
+    suspend fun encodeImage(bitmap: Bitmap): FloatArray {
         val scaled = centerCropAndScale(bitmap, IMAGE_SIZE)
 
         val pixels = IntArray(IMAGE_SIZE * IMAGE_SIZE)
         scaled.getPixels(pixels, 0, IMAGE_SIZE, 0, 0, IMAGE_SIZE, IMAGE_SIZE)
 
-
-
-        val input = ByteBuffer.allocateDirect(1 * 3 * IMAGE_SIZE * IMAGE_SIZE * 4)
-            .order(ByteOrder.nativeOrder())
-
+        imageInputBuffer.clear()
 
         for (pixel in pixels) {
-            input.putFloat((pixel shr 16 and 0xFF) / 255f)
+            imageInputBuffer.putFloat((pixel shr 16 and 0xFF) / 255f)
         }
         for (pixel in pixels) {
-            input.putFloat((pixel shr 8 and 0xFF) / 255f)
+            imageInputBuffer.putFloat((pixel shr 8 and 0xFF) / 255f)
         }
         for (pixel in pixels) {
-            input.putFloat((pixel and 0xFF) / 255f)
+            imageInputBuffer.putFloat((pixel and 0xFF) / 255f)
         }
+
+        imageInputBuffer.rewind()
 
         val output = Array(1) { FloatArray(EMBED_DIM) }
 
-        imageInterpreter.run(input, output)
+        imageInterpreter.run(imageInputBuffer, output)
 
         val result = l2Normalize(output[0])
 
 
         return result
     }
-
+    private val textInputBuffer: ByteBuffer by lazy {
+        ByteBuffer.allocateDirect(1 * CONTEXT_LENGTH * EMBED_DIM * 4).order(ByteOrder.nativeOrder())
+    }
     fun encodeText(query: String): FloatArray {
         val tokens = CLIPTokenizer.tokenize(query)
 
@@ -92,17 +107,16 @@ class MemoriaEncoder(private val context: Context) {
         if (eosPos == -1) eosPos = tokens.indexOf(0)
         if (eosPos == -1) eosPos = 76
 
-        val textInput = ByteBuffer.allocateDirect(1 * CONTEXT_LENGTH * EMBED_DIM * 4)
-            .order(ByteOrder.nativeOrder())
+        textInputBuffer.clear()
 
         for (i in 0 until CONTEXT_LENGTH) {
             val tokenId = tokens[i].toInt().coerceIn(0, VOCAB_SIZE - 1)
-            val embed = embeddingTable[tokenId]
+            val embed = getEmbedding(tokenId)
             for (value in embed) {
-                textInput.putFloat(value)
+                textInputBuffer.putFloat(value)
             }
         }
-        textInput.rewind()
+        textInputBuffer.rewind()
 
 
         val eosInput = intArrayOf(eosPos)
@@ -115,7 +129,7 @@ class MemoriaEncoder(private val context: Context) {
         val eosIdx = textInterpreter.getInputIndex("serving_default_eos_positions:0")
 
         val inputs = arrayOfNulls<Any>(2)
-        inputs[embedIdx] = textInput
+        inputs[embedIdx] = textInputBuffer
         inputs[eosIdx] = eosInput
 
         val outputs = mutableMapOf<Int, Any>()
@@ -185,21 +199,24 @@ class MemoriaEncoder(private val context: Context) {
 
         return croppedBitmap
     }
+    private fun loadEmbeddingTable(){
+        val afd = context.assets.openFd("token_embeddings_f32.bin")
+        val mapped = afd.createInputStream().channel.map(
+            FileChannel.MapMode.READ_ONLY,
+            afd.startOffset,
+            afd.declaredLength
+        ) as MappedByteBuffer
+        mapped.order(ByteOrder.LITTLE_ENDIAN)
+        embeddingBuffer = mapped
+    }
 
-    private fun loadEmbeddingTable() {
-        val stream = context.assets.open("token_embeddings_f32.bin")
-        val bytes = stream.readBytes()
-
-        val buf = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
-
-        embeddingTable = Array(VOCAB_SIZE) { FloatArray(EMBED_DIM) }
-
-        for (i in 0 until VOCAB_SIZE) {
-            for (j in 0 until EMBED_DIM) {
-                embeddingTable[i][j] = buf.float
-            }
+    private fun getEmbedding(tokenId: Int): FloatArray {
+        val embed = FloatArray(EMBED_DIM)
+        val byteOffset = tokenId * EMBED_DIM * 4
+        for (j in 0 until EMBED_DIM) {
+            embed[j] = embeddingBuffer.getFloat(byteOffset + j * 4)
         }
-
+        return embed
     }
 
     fun freeImageEncoder() {

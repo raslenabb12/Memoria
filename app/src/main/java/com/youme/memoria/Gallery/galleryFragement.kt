@@ -173,9 +173,12 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
                     is IndexingViewModel.IndexingState.Ready -> {
                         processButton.setIconResource(R.drawable.baseline_play_arrow_24)
                         logText.text = "Indexed : ${state.processed}/${state.total}"
-                        progressbar.isVisible=false
-                        processButton.isVisible=true
 
+
+                        progressbar.max = state.total
+                        progressbar.progress = state.processed
+
+                        processButton.isVisible=true
                         processButton.setOnClickListener {
                             indexingViewModel.startIndexing()
                             logText.text="Loading"
@@ -204,7 +207,7 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
                     is IndexingViewModel.IndexingState.Completed ->{
                         processButton.isVisible=false
                         logText.text = "Indexing completed: ${state.total}"
-                        progressbar.isVisible=false
+                        //progressbar.isVisible=false
                     }
                     else -> {}
                 }

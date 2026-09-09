@@ -2,7 +2,10 @@ package com.youme.memoria.Gallery
 
 import android.content.ContentUris
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.net.Uri
+import android.os.BatteryManager
 import android.provider.MediaStore
 import android.text.format.Formatter
 import android.util.Log
@@ -13,12 +16,15 @@ import androidx.lifecycle.viewModelScope
 import com.youme.memoria.Gallery.IndexingViewModel.IndexingState
 import com.youme.memoria.ImageSizeUtil
 import com.youme.memoria.PhotoRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.File
 import kotlin.coroutines.cancellation.CancellationException
@@ -49,8 +55,11 @@ class IndexingViewModel(
     val folders: StateFlow<List<String>> = _Folders.asStateFlow()
     val dbSize = MutableStateFlow<String>("0")
 
+    val batteryTemp  = MutableStateFlow<Float>(0f)
+
     init {
         scanGallery()
+        getBatteryTemperature()
     }
     private fun getDatabaseSizeInBytes(context: Context, dbName: String): Long {
         val dbFile = context.getDatabasePath(dbName)
@@ -123,14 +132,32 @@ class IndexingViewModel(
 
 
     }
+    enum class ThermalStatus { GREEN, ORANGE, RED }
+
+    fun getThermalStatus(tempCelsius: Float): ThermalStatus {
+        return when {
+            tempCelsius < 35f -> ThermalStatus.GREEN
+            tempCelsius < 42f -> ThermalStatus.ORANGE
+            else -> ThermalStatus.RED
+        }
+    }
+    fun getBatteryTemperature() {
+        val intentFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        val batteryStatus = appContext.registerReceiver(null, intentFilter)
+
+        val tempTenths = batteryStatus?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) ?: 0
+
+        batteryTemp.value =  tempTenths / 10.0f
+    }
 
     fun startIndexing(){
         if (indexingJob?.isActive == true) return
+        var etaMin = 0f
         var processedSize= 0
-        indexingJob = viewModelScope.launch {
+        indexingJob = viewModelScope.launch(Dispatchers.IO) {
             try {
                 val alreadyExists = repo.alreadyExistsList().map { it.uri.toUri() }.toMutableList()
-                val toProcess = imglist.filter { !alreadyExists.contains(it) }
+                val toProcess = imglist.filter { it !in alreadyExists }
 
                 processedSize = alreadyExists.size
 
@@ -168,16 +195,40 @@ class IndexingViewModel(
                     } catch (e: Exception) {
                         Log.e("ImageEncoding", "Failed: $uri", e)
                     }
+                    if (index%10 == 0 || index == toProcess.size-1){
+                        val endTime = System.currentTimeMillis()
+
+                        val etaMs = (endTime - startTime).toFloat() * (toProcess.size - index - 1)
+                        etaMin = (etaMs / 1000f) / 60
 
 
-                    val endTime = System.currentTimeMillis()
+                        //update ui info
+                        getBatteryTemperature()
+                        getFormattedDatabaseSize("photo_db")
 
-                    val etaMs = (endTime - startTime).toFloat() * (toProcess.size - index - 1)
-                    val etaMin = (etaMs / 1000f) / 60
+
+                        when (getThermalStatus(batteryTemp.value)) {
+                            ThermalStatus.RED -> {
+                                while (isActive) {
+                                    delay(5000)
+                                    getBatteryTemperature()
+                                    if (getThermalStatus(batteryTemp.value) != ThermalStatus.RED) break
+                                }
+                            }
+                            ThermalStatus.ORANGE -> {
+                                delay(800)
+                            }
+                            ThermalStatus.GREEN -> {
+                            }
+                        }
+                    }
+
 
 
                     _state.value = IndexingState.Running(processedSize,imglist.size,etaMin)
                     processedSize++
+
+
                 }
 
                 _state.value = IndexingState.Completed(processedSize)

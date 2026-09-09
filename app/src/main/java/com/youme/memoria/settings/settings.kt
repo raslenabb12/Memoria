@@ -2,8 +2,11 @@ package com.youme.memoria.settings
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.LinearLayout
@@ -11,6 +14,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.graphics.toColorInt
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -38,16 +42,52 @@ class settings : Fragment(R.layout.settings_layout) {
         super.onViewCreated(view, savedInstanceState)
         repo= PhotoRepository(requireContext())
         setupIndexingUi()
-        setupDBSize()
+        setupUI()
         setUpAppVersion()
         openRepo()
     }
-    private fun setupDBSize(){
+    private fun setupUI(){
         val dBSizeText = requireView().findViewById<TextView>(R.id.db_size)
+        val batteryStatusChip = requireView().findViewById<Chip>(R.id.chip)
+        val alertText = requireView().findViewById<TextView>(R.id.textView4)
         indexingViewModel.getFormattedDatabaseSize("photo_db")
         lifecycleScope.launch {
             indexingViewModel.dbSize.collectLatest {
                 dBSizeText.text =it
+            }
+        }
+        lifecycleScope.launch {
+            indexingViewModel.batteryTemp.collectLatest {temp->
+                batteryStatusChip.apply {
+                    text =  "$temp°C"
+
+                      when{
+                        temp<35f->{
+                            chipIconTint= ColorStateList.valueOf(Color.GREEN)
+                            alertText.isVisible = false
+                        }
+
+                        temp<42f->{
+                            val color=ColorStateList.valueOf("#FFA500".toColorInt())
+                            chipIconTint = color
+                            alertText.apply {
+                                text = "Running a bit slower to keep your phone cool"
+                                isVisible=true
+                                setTextColor(color)
+                            }
+                        }
+
+                        else->{
+                            val color = ColorStateList.valueOf(Color.RED)
+                            chipIconTint = color
+                            alertText.apply {
+                                text = "Paused — your device is warm. Indexing will resume once it cools down."
+                                isVisible=true
+                                setTextColor(color)
+                            }
+                        }
+                    }
+                }
             }
         }
 
