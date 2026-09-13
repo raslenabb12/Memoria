@@ -2,7 +2,6 @@ package com.youme.memoria.Gallery
 
 
 import android.Manifest
-import android.content.ContentUris
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -14,40 +13,28 @@ import android.provider.MediaStore
 import android.util.Log
 import android.view.View
 import android.widget.Button
-import android.widget.ImageButton
-import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.cardview.widget.CardView
-import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.ContextCompat
-import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.youme.memoria.ImageLoading.ImagePagingAdapter
-import com.youme.memoria.ImageSizeUtil
 import com.youme.memoria.PhotoRepository
 import com.youme.memoria.R
 import com.youme.memoria.imageViewer.imageViewerActivity
 import com.youme.memoria.search.searchActivity
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlin.coroutines.cancellation.CancellationException
-import kotlin.math.log
 
 class GalleryFragement  : Fragment(R.layout.gallery_layout){
 
@@ -162,9 +149,29 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
     }
     private fun indexinState(){
 
+        var collapsed = false
+
+        val largeIndicatorBox = requireView().findViewById<MaterialCardView>(R.id.cardView)
         val logText = requireView().findViewById<TextView>(R.id.textView2)
         val processButton = requireView().findViewById<MaterialButton>(R.id.button)
         val progressbar  = requireView().findViewById<LinearProgressIndicator>(R.id.progressbar)
+
+        val smallIndicatorBox = requireView().findViewById<MaterialCardView>(R.id.small_indicator)
+        val smallIndicatorText = requireView().findViewById<TextView>(R.id.textView12)
+        val smallIndicatorProgress = requireView().findViewById<LinearProgressIndicator>(R.id.prog2)
+
+        val collapseButton  = requireView().findViewById<Button>(R.id.button5)
+
+        collapseButton.setOnClickListener {
+            animateIndicator(largeIndicatorBox,smallIndicatorBox)
+        }
+        smallIndicatorBox.setOnClickListener {
+            animateIndicator(smallIndicatorBox,largeIndicatorBox)
+        }
+
+
+
+
 
 
         lifecycleScope.launch {
@@ -174,9 +181,16 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
                         processButton.setIconResource(R.drawable.baseline_play_arrow_24)
                         logText.text = "Indexed : ${state.processed}/${state.total}"
 
+                        smallIndicatorText.text = "${state.processed}/${state.total}"
 
-                        progressbar.max = state.total
-                        progressbar.progress = state.processed
+                        progressbar.apply {
+                            max = state.total
+                            progress  =state.processed
+                        }
+                        smallIndicatorProgress.apply {
+                            max = state.total
+                            progress  =state.processed
+                        }
 
                         processButton.isVisible=true
                         processButton.setOnClickListener {
@@ -188,7 +202,7 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
                     }
                     is IndexingViewModel.IndexingState.Running ->{
                         logText.text = "Indexing: ${state.processed}/${state.total}"
-
+                        smallIndicatorText.text = "${state.processed}/${state.total}"
 
                         processButton.setIconResource(R.drawable.baseline_pause_24)
                         processButton.isVisible=true
@@ -201,8 +215,14 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
                         progressbar.isIndeterminate=false
 
 
-                        progressbar.max = state.total
-                        progressbar.progress = state.processed
+                        progressbar.apply {
+                            max =  state.total
+                            progress = state.processed
+                        }
+                        smallIndicatorProgress.apply {
+                            max = state.total
+                            progress  =state.processed
+                        }
                     }
                     is IndexingViewModel.IndexingState.Completed ->{
                         processButton.isVisible=false
@@ -215,6 +235,17 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
         }
 
 
+    }
+    private fun animateIndicator(visibleView : View,hiddenView : View){
+        visibleView.animate().scaleX(0f).scaleY(0f).setDuration(200).withEndAction {
+            visibleView.isVisible=false
+            hiddenView.apply {
+                isVisible=true
+                scaleX=0f
+                scaleY=0f
+            }
+            hiddenView.animate().scaleX(1f).scaleY(1f).setDuration(200).start()
+        }.start()
     }
 
     private fun navigateToSearch(){
@@ -244,8 +275,4 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
         }
     }
 
-    override fun onDestroy() {
-        repo.unloadModel()
-        super.onDestroy()
-    }
 }

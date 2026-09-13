@@ -27,7 +27,7 @@ class MemoriaEncoder(private val context: Context) {
     private lateinit var imageInterpreter: Interpreter
     private lateinit var textInterpreter: Interpreter
     private lateinit var embeddingTable: Array<FloatArray>
-    private val imageMutex = Mutex()
+    private val modelMutex = Mutex()
 
     companion object {
         const val IMAGE_SIZE = 256
@@ -36,7 +36,7 @@ class MemoriaEncoder(private val context: Context) {
         const val VOCAB_SIZE = 49408
     }
 
-    fun initializeImageEncoder() {
+    fun initializeImageEncoder(){
         val options = Interpreter.Options().apply {
             numThreads = 4
             useXNNPACK = true
@@ -67,32 +67,38 @@ class MemoriaEncoder(private val context: Context) {
 
     suspend fun encodeImage(bitmap: Bitmap): FloatArray {
         val scaled = centerCropAndScale(bitmap, IMAGE_SIZE)
+        try {
+            val pixels = IntArray(IMAGE_SIZE * IMAGE_SIZE)
+            scaled.getPixels(pixels, 0, IMAGE_SIZE, 0, 0, IMAGE_SIZE, IMAGE_SIZE)
 
-        val pixels = IntArray(IMAGE_SIZE * IMAGE_SIZE)
-        scaled.getPixels(pixels, 0, IMAGE_SIZE, 0, 0, IMAGE_SIZE, IMAGE_SIZE)
+            imageInputBuffer.clear()
 
-        imageInputBuffer.clear()
+            for (pixel in pixels) {
+                imageInputBuffer.putFloat((pixel shr 16 and 0xFF) / 255f)
+            }
+            for (pixel in pixels) {
+                imageInputBuffer.putFloat((pixel shr 8 and 0xFF) / 255f)
+            }
+            for (pixel in pixels) {
+                imageInputBuffer.putFloat((pixel and 0xFF) / 255f)
+            }
 
-        for (pixel in pixels) {
-            imageInputBuffer.putFloat((pixel shr 16 and 0xFF) / 255f)
+            imageInputBuffer.rewind()
+
+            val output = Array(1) { FloatArray(EMBED_DIM) }
+
+            imageInterpreter.run(imageInputBuffer, output)
+
+            val result = l2Normalize(output[0])
+
+
+            return result
         }
-        for (pixel in pixels) {
-            imageInputBuffer.putFloat((pixel shr 8 and 0xFF) / 255f)
-        }
-        for (pixel in pixels) {
-            imageInputBuffer.putFloat((pixel and 0xFF) / 255f)
+        finally {
+            scaled.recycle()
         }
 
-        imageInputBuffer.rewind()
 
-        val output = Array(1) { FloatArray(EMBED_DIM) }
-
-        imageInterpreter.run(imageInputBuffer, output)
-
-        val result = l2Normalize(output[0])
-
-
-        return result
     }
     private val textInputBuffer: ByteBuffer by lazy {
         ByteBuffer.allocateDirect(1 * CONTEXT_LENGTH * EMBED_DIM * 4).order(ByteOrder.nativeOrder())

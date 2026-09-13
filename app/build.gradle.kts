@@ -13,8 +13,8 @@ android {
         applicationId = "com.youme.memoria"
         minSdk = 28
         targetSdk = 36
-        versionCode = 1
-        versionName = "v1.1.0-Beta"
+        versionCode = 2
+        versionName = "v1.2.1-Beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

@@ -48,10 +48,10 @@ class imageViewerActivity : AppCompatActivity(){
 
         val matchContextCard = findViewById<CardView>(R.id.cardView2)
         val matchContextText = findViewById<TextView>(R.id.textView3)
-        if (isFromSearch){
-            matchContextCard.isVisible=true
-            matchContextText.text = "Matched: '${intent.getStringExtra("matchContext")}'"
-        }
+//        if (isFromSearch){
+//            matchContextCard.isVisible=true
+//            matchContextText.text = "Matched: '${intent.getStringExtra("matchContext")}'"
+//        }
 
         openAppGalleryButton.setOnClickListener {
             val currentItem = Adatper.peek(viewpager2.currentItem)

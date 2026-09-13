@@ -18,6 +18,7 @@ import com.youme.memoria.ImageSizeUtil
 import com.youme.memoria.PhotoRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -192,7 +193,7 @@ class IndexingViewModel(
                     } catch (e: CancellationException) {
                         throw e
 
-                    } catch (e: Exception) {
+                    } catch (e: Throwable) {
                         Log.e("ImageEncoding", "Failed: $uri", e)
                     }
                     if (index%10 == 0 || index == toProcess.size-1){
@@ -247,6 +248,13 @@ class IndexingViewModel(
     }
 
     fun pause() = indexingJob?.cancel()
+
+    override fun onCleared() {
+        viewModelScope.launch(NonCancellable) {
+            repo.unloadModel()
+        }
+        super.onCleared()
+    }
     sealed class IndexingState {
         object Idle : IndexingState()
 

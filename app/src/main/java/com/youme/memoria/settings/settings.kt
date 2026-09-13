@@ -108,7 +108,7 @@ class settings : Fragment(R.layout.settings_layout) {
     private fun setUpAppVersion(){
         val versionName: String = BuildConfig.VERSION_NAME
         val versionText = requireView().findViewById<TextView>(R.id.version)
-        versionText.text="Version $versionName"
+        versionText.text=versionName
     }
     private fun setupIndexingUi(){
         val progressLog = requireView().findViewById<TextView>(R.id.textView7)

@@ -32,10 +32,17 @@ class PhotoRepository(context: Context) {
     private val memoriaEncoder = MemoriaEncoder(context)
 
     suspend fun getCountPhotos() = dao.count()
+
+    private val imageModelMutex = Mutex()
+
+
     suspend fun initializeImageModel() {
-        withContext(Dispatchers.IO){
-            memoriaEncoder.initializeImageEncoder()
+        imageModelMutex.withLock {
+            withContext(Dispatchers.IO){
+                memoriaEncoder.initializeImageEncoder()
+            }
         }
+
     }
 
     private val initMutex = Mutex()
@@ -72,7 +79,14 @@ class PhotoRepository(context: Context) {
     )
 
     suspend fun encodeImage(context : Context,image: Uri) : FloatArray {
-        return withContext(Dispatchers.IO){ memoriaEncoder.encodeImage(uriToBitmap(context,image)) }
+        return withContext(Dispatchers.IO){
+            val bitmap = uriToBitmap(context, image)
+            try {
+                memoriaEncoder.encodeImage(bitmap)
+            } finally {
+                bitmap.recycle()
+            }
+        }
     }
 
     suspend fun search(query: String,indexedImages : List<PhotoEntity>) : List<Pair<PhotoEntity,Float>>{
@@ -115,7 +129,7 @@ class PhotoRepository(context: Context) {
     }
     suspend fun alreadyExists(uri: String): Boolean = dao.existsByUri(uri)!=null
 
-     fun unloadModel() = memoriaEncoder.close()
+    suspend fun unloadModel() = imageModelMutex.withLock {memoriaEncoder.close()}
     fun unloadImageModel() = memoriaEncoder.freeImageEncoder()
 
     fun uriToBitmap(context: Context, uri: Uri): Bitmap {

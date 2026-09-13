@@ -221,7 +221,6 @@ class searchActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        repo.unloadModel()
         SearchResultCache.searchResults = null
         super.onDestroy()
     }

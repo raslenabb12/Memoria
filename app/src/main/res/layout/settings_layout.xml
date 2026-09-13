@@ -40,7 +40,7 @@
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="-20dp"
                 android:layout_marginEnd="16dp"
-                app:cardBackgroundColor="#333333"
+                app:cardBackgroundColor="#353535"
                 app:cardCornerRadius="10dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -95,8 +95,9 @@
                         android:id="@+id/chip"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_gravity="center"
                         android:text="34.5C"
-                        app:chipBackgroundColor="#333333"
+                        app:chipBackgroundColor="#353535"
                         app:chipIcon="@drawable/baseline_circle_24"
                         app:chipIconSize="10dp"
                         app:chipIconVisible="true"
@@ -126,7 +127,7 @@
                         android:layout_width="15dp"
                         android:layout_height="15dp"
                         android:layout_marginStart="16dp"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="16dp"
                         android:tint="@color/primary_80"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
@@ -152,7 +153,7 @@
                         android:id="@+id/textView7"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
+                        android:layout_marginTop="8dp"
                         android:layout_marginEnd="16dp"
                         android:fontFamily="@font/hanken_grotesk"
                         android:text="0/0"
@@ -300,7 +301,8 @@
                             android:fontFamily="@font/jetbrains_mono"
                             android:text="40MB"
                             android:textColor="@android:color/white"
-                            android:textSize="16sp" />
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -336,16 +338,27 @@
                             app:srcCompat="@drawable/outline_info_24" />
 
                         <TextView
-                            android:id="@+id/version"
+
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
                             android:layout_marginStart="10dp"
                             android:layout_weight="1"
                             android:fontFamily="@font/jetbrains_mono"
-                            android:text="Version 1.2.0"
+                            android:text="Version"
                             android:textColor="@color/primary_90"
                             android:textSize="16sp" />
+
+                        <TextView
+                            android:id="@+id/version"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="center"
+                            android:layout_marginEnd="12dp"
+                            android:fontFamily="@font/jetbrains_mono"
+                            android:text="V1.2.0"
+                            android:textColor="@android:color/white"
+                            android:textStyle="bold" />
 
                     </LinearLayout>
 
