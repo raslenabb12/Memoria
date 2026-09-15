@@ -8,7 +8,7 @@
 **Search your photos with words — or with a photo. No cloud. No account. No data leaving your phone.**
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![Android](https://img.shields.io/badge/Android-8.0%2B-green.svg)](https://android.com)
+[![Android](https://img.shields.io/badge/Android-9.0%2B-green.svg)](https://android.com)
 [![TFLite](https://img.shields.io/badge/TFLite-MobileCLIP--S0-orange.svg)](https://github.com/apple/ml-mobileclip)
 [![Release](https://img.shields.io/github/v/release/raslenabb12/Memoria?include_prereleases)](https://github.com/raslenabb12/Memoria/releases)
 [![Stars](https://img.shields.io/github/stars/raslenabb12/Memoria?style=social)](https://github.com/raslenabb12/Memoria/stargazers)
@@ -97,7 +97,7 @@ The model used is **MobileCLIP-S0** — Apple's mobile-optimized CLIP variant th
 
 ### Requirements
 
-- Android 8.0+ (API 26)
+- Android 9.0+ (API 28)
 - ~300 MB free storage (for models + local database)
 - 3 GB+ RAM recommended for GPU acceleration
 
