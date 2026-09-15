@@ -22,7 +22,7 @@
         style="@style/Widget.Material3Expressive.BottomNavigationView"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:background="#2B2D30"
+        android:background="@color/neutral_12"
         app:labelVisibilityMode="unlabeled"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

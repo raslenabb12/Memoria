@@ -24,6 +24,7 @@ fun FloatArray.toByteArray(): ByteArray {
 }
 
 fun ByteArray.toFloatArray(): FloatArray {
+    if (isEmpty()) return FloatArray(0)
     val buf = ByteBuffer.wrap(this).order(ByteOrder.LITTLE_ENDIAN)
     return FloatArray(size / 4) { buf.getFloat() }
 }

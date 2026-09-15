@@ -23,7 +23,8 @@ data class SearchFilters(
     val startDate: Long?,
     val endDate: Long?,
     val folders: List<String>,
-    val camera: String?
+    val camera: String?,
+    val confidence : Float = 0.15f
 )
 
 class PhotoRepository(context: Context) {
@@ -77,6 +78,15 @@ class PhotoRepository(context: Context) {
         searchFilters.camera,
         foldersEmpty = searchFilters.folders.isEmpty()
     )
+    suspend fun markAsFailed(uri: String) {
+        if (alreadyExists(uri)) return
+        dao.insert(PhotoEntity(
+            uri = uri,
+            embedding = ByteArray(0),
+            width = 0,
+            height = 0
+        ))
+    }
 
     suspend fun encodeImage(context : Context,image: Uri) : FloatArray {
         return withContext(Dispatchers.IO){
@@ -89,17 +99,20 @@ class PhotoRepository(context: Context) {
         }
     }
 
-    suspend fun search(query: String,indexedImages : List<PhotoEntity>) : List<Pair<PhotoEntity,Float>>{
+    suspend fun search(query: String,indexedImages : List<PhotoEntity>,confidence: Float) : List<Pair<PhotoEntity,Float>>{
         return withContext(Dispatchers.IO){
             val encodedText = memoriaEncoder.encodeText(query)
             val allPhotos = indexedImages
 
-            allPhotos.map { photo->
+            allPhotos.filter { it.embedding.isNotEmpty() }.map { photo->
                 val score  = memoriaEncoder.cosineSimilarity(encodedText,photo.embedding.toFloatArray())
                 photo to score
-            }.sortedByDescending { it.second }
-
+            }.sortedByDescending { it.second }.filter { it.second>=confidence }
         }
+    }
+    suspend fun pruneDeletedPhotos(currentUris: List<Uri>) {
+        val currentUriStrings = currentUris.map { it.toString() }
+        dao.deleteWhereUriNotIn(currentUriStrings)
     }
     suspend fun searchByImage(context : Context,image: Uri,indexedImages : List<PhotoEntity>) : List<Pair<PhotoEntity,Float>>{
         return withContext(Dispatchers.IO){
@@ -107,7 +120,7 @@ class PhotoRepository(context: Context) {
             val encodedImage= memoriaEncoder.encodeImage(uriToBitmap(context,image))
             val allPhotos = indexedImages
 
-            allPhotos.map { photo->
+            allPhotos.filter { it.embedding.isNotEmpty() }.map { photo->
                 val score  = memoriaEncoder.cosineSimilarity(encodedImage,photo.embedding.toFloatArray())
                 photo to score
             }.sortedByDescending { it.second }

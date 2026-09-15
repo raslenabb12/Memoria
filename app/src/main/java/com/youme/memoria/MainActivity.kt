@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.ViewGroup
 
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.cardview.widget.CardView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -18,6 +19,9 @@ import com.youme.memoria.settings.settings
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        AppCompatDelegate.setDefaultNightMode(
+            AppCompatDelegate.MODE_NIGHT_YES
+        )
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setupPadding()

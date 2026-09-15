@@ -148,10 +148,9 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
         }
     }
     private fun indexinState(){
+        val toolbar = requireView().findViewById<MaterialToolbar>(R.id.toolbar)
 
-        var collapsed = false
-
-        val largeIndicatorBox = requireView().findViewById<MaterialCardView>(R.id.cardView)
+        val largeIndicatorBox = requireView().findViewById<MaterialCardView>(R.id.big_indicator)
         val logText = requireView().findViewById<TextView>(R.id.textView2)
         val processButton = requireView().findViewById<MaterialButton>(R.id.button)
         val progressbar  = requireView().findViewById<LinearProgressIndicator>(R.id.progressbar)
@@ -164,9 +163,10 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
 
         collapseButton.setOnClickListener {
             animateIndicator(largeIndicatorBox,smallIndicatorBox)
+            toolbar.title=""
         }
         smallIndicatorBox.setOnClickListener {
-            animateIndicator(smallIndicatorBox,largeIndicatorBox)
+            animateIndicator(smallIndicatorBox,largeIndicatorBox,toolbar)
         }
 
 
@@ -181,7 +181,7 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
                         processButton.setIconResource(R.drawable.baseline_play_arrow_24)
                         logText.text = "Indexed : ${state.processed}/${state.total}"
 
-                        smallIndicatorText.text = "${state.processed}/${state.total}"
+                        smallIndicatorText.text = "Paused"
 
                         progressbar.apply {
                             max = state.total
@@ -227,7 +227,18 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
                     is IndexingViewModel.IndexingState.Completed ->{
                         processButton.isVisible=false
                         logText.text = "Indexing completed: ${state.total}"
-                        //progressbar.isVisible=false
+
+                        progressbar.apply {
+                            max =  state.total
+                            progress = state.total
+                        }
+                        smallIndicatorProgress.apply {
+                            max = state.total
+                            progress  =state.total
+                        }
+                        progressbar.isIndeterminate=false
+
+                        smallIndicatorText.text = "Completed"
                     }
                     else -> {}
                 }
@@ -236,13 +247,16 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
 
 
     }
-    private fun animateIndicator(visibleView : View,hiddenView : View){
+    private fun animateIndicator(visibleView : View,hiddenView : View,toolbar: MaterialToolbar?=null){
         visibleView.animate().scaleX(0f).scaleY(0f).setDuration(200).withEndAction {
             visibleView.isVisible=false
             hiddenView.apply {
                 isVisible=true
                 scaleX=0f
                 scaleY=0f
+            }
+            toolbar?.apply {
+                title="Memoria"
             }
             hiddenView.animate().scaleX(1f).scaleY(1f).setDuration(200).start()
         }.start()
@@ -262,17 +276,6 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
 
         }
     }
-    private fun formatEta(etaMs: Long): String {
-        if (etaMs <= 0) return "< 1s"
-        val totalSeconds = etaMs / 1000
-        val minutes = totalSeconds / 60
-        val seconds = totalSeconds % 60
 
-        return when {
-            minutes > 60 -> "> 1h"
-            minutes > 0 -> "${minutes}m ${seconds}s"
-            else -> "${seconds}s"
-        }
-    }
 
 }

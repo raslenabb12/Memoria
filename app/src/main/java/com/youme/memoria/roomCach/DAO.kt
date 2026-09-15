@@ -42,6 +42,10 @@ interface PhotoDao {
 """)
     suspend fun getAvailableFolders(): List<FolderCount>
 
+    @Query("delete from photo where uri in (:toDelete)")
+    suspend fun deleteWhereUriNotIn(toDelete : List<String>)
+
+
     @Query("""
     SELECT DISTINCT cameraMake || ' ' || cameraModel AS camera FROM photo 
     WHERE cameraMake IS NOT NULL AND cameraModel IS NOT NULL 

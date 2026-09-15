@@ -86,6 +86,7 @@ class searchActivity : AppCompatActivity() {
         recyclerView.apply {
             this.layoutManager = layoutManager
             adapter = Adapter
+            itemAnimator = null
         }
 
         setupSearch()
@@ -184,6 +185,9 @@ class searchActivity : AppCompatActivity() {
                         is SearchState.Loading -> progressbar.isVisible = true
                         is SearchState.Success -> {
                             progressbar.isVisible = false
+                            state.results.take(10).forEach {
+                                Log.d("testdata", "setupSearch: ${it.second}")
+                            }
                             val mappedList = state.results.map { it.first }.map {
                                 ImageUriItem(uri = it.uri.toUri(), height = it.height, width = it.width, id = it.uri.hashCode().toLong())
                             }

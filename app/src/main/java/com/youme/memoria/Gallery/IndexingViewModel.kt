@@ -6,9 +6,11 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
 import android.os.BatteryManager
+import android.os.PowerManager
 import android.provider.MediaStore
 import android.text.format.Formatter
 import android.util.Log
+import android.widget.Toast
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -27,6 +29,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.io.File
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -47,7 +51,9 @@ class IndexingViewModel(
 
     private var indexingJob : Job?= null
 
+    private val imglistMutex = Mutex()
     val imglist  =  mutableListOf<Uri>()
+
 
     private val _state = MutableStateFlow<IndexingState>(IndexingState.Idle)
     val state: StateFlow<IndexingState> = _state.asStateFlow()
@@ -59,8 +65,29 @@ class IndexingViewModel(
     val batteryTemp  = MutableStateFlow<Float>(0f)
 
     init {
-        scanGallery()
-        getBatteryTemperature()
+        viewModelScope.launch {
+            scanGallery()
+            getBatteryTemperature()
+        }
+    }
+    private var wakeLock: PowerManager.WakeLock? = null
+
+    private fun acquireWakeLock() {
+        val powerManager = appContext.getSystemService(Context.POWER_SERVICE) as PowerManager
+        wakeLock = powerManager.newWakeLock(
+            PowerManager.PARTIAL_WAKE_LOCK,
+            "Memoria::IndexingWakeLock"
+        ).apply {
+            setReferenceCounted(false)
+            acquire(10 * 60 * 1000L)
+        }
+    }
+
+    private fun releaseWakeLock() {
+        wakeLock?.let {
+            if (it.isHeld) it.release()
+        }
+        wakeLock = null
     }
     private fun getDatabaseSizeInBytes(context: Context, dbName: String): Long {
         val dbFile = context.getDatabasePath(dbName)
@@ -84,7 +111,12 @@ class IndexingViewModel(
             dbSize.value= Formatter.formatFileSize(appContext, sizeInBytes)
         }
     }
-    fun scanGallery() {
+
+    suspend fun scanGallery() {
+        imglistMutex.withLock {
+            imglist.clear()
+
+
             val projection = arrayOf(
                 MediaStore.Images.Media._ID,
                 MediaStore.Images.Media.DISPLAY_NAME,
@@ -117,21 +149,35 @@ class IndexingViewModel(
                         id
                     )
                     imglist.add(uri)
-
                 }
             }
         viewModelScope.launch {
             try {
                 val alreadyExists = repo.alreadyExistsList().map { it.uri.toUri() }.toMutableList()
-                val toProcess = imglist.filter { !alreadyExists.contains(it) }
+                val toDelete=alreadyExists.filter { it !in imglist }
 
-                if (imglist.isNotEmpty())  _state.value = IndexingState.Ready(alreadyExists.size,imglist.size)
+                if (toDelete.isNotEmpty() && imglist.isNotEmpty()) {
+                    Toast.makeText(appContext, "Found ${toDelete.size} missing image(s). Deleting them now.", Toast.LENGTH_SHORT).show()
+                    viewModelScope.launch {
+                        repo.pruneDeletedPhotos(toDelete)
+                    }
+                }
+
+
+                if (alreadyExists.filter { it !in toDelete }.size == imglist.size){
+                    _state.value = IndexingState.Completed(imglist.size)
+                }else{
+                    if (imglist.isNotEmpty())  _state.value = IndexingState.Ready(alreadyExists.filter { it !in toDelete }.size,imglist.size)
+                }
+
+
             }catch (e: Exception){
 
             }
         }
 
 
+    }
     }
     enum class ThermalStatus { GREEN, ORANGE, RED }
 
@@ -153,6 +199,7 @@ class IndexingViewModel(
 
     fun startIndexing(){
         if (indexingJob?.isActive == true) return
+        acquireWakeLock()
         var etaMin = 0f
         var processedSize= 0
         indexingJob = viewModelScope.launch(Dispatchers.IO) {
@@ -195,13 +242,13 @@ class IndexingViewModel(
 
                     } catch (e: Throwable) {
                         Log.e("ImageEncoding", "Failed: $uri", e)
+                        repo.markAsFailed(uri.toString())
                     }
                     if (index%10 == 0 || index == toProcess.size-1){
                         val endTime = System.currentTimeMillis()
 
                         val etaMs = (endTime - startTime).toFloat() * (toProcess.size - index - 1)
-                        etaMin = (etaMs / 1000f) / 60
-
+                        etaMin = etaMs
 
                         //update ui info
                         getBatteryTemperature()
@@ -243,6 +290,7 @@ class IndexingViewModel(
 
             }finally {
                 repo.unloadModel()
+                releaseWakeLock()
             }
         }
     }

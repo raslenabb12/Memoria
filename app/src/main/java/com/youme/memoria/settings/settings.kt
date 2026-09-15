@@ -144,10 +144,11 @@ class settings : Fragment(R.layout.settings_layout) {
                         progressLog.text="${state.processed}/${state.total}"
                         progressBar.max=state.total
                         progressBar.progress=state.processed
+                        val old= " ETA: ${"%.1f".format(state.etaMinutes)}Min"
 
                         etaLog.apply {
                             isVisible=true
-                            text = "${(state.processed*100)/state.total}%  ETA: ${"%.1f".format(state.etaMinutes)}Min"
+                            text = "${(state.processed*100)/state.total}%  ETA: ${formatEta(state.etaMinutes.toLong())}"
                         }
 
                         pauseBt.apply {
@@ -167,10 +168,28 @@ class settings : Fragment(R.layout.settings_layout) {
                         etaLog.isVisible=false
                         statusLog.text="Status: Completed"
                         progressLog.text="${state.total}/${state.total}"
+
+                        progressBar.apply {
+                            max = state.total
+                            progress = state.total
+                        }
                     }
                 }
             }
         }
 
+    }
+    private fun formatEta(etaMs: Long): String {
+        if (etaMs <= 0) return "< 1s"
+        val totalSeconds = etaMs / 1000
+        val hours = totalSeconds / 3600
+        val minutes = (totalSeconds % 3600) / 60
+        val seconds = totalSeconds % 60
+
+        return when {
+            hours > 0 -> "${hours}h ${minutes}m"
+            minutes > 0 -> "${minutes}m ${seconds}s"
+            else -> "${seconds}s"
+        }
     }
 }

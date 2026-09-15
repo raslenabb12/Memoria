@@ -1,20 +1,27 @@
 package com.youme.memoria.search
 
+import android.graphics.Color
 import android.os.Bundle
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
 import android.util.LayoutDirection
 import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.graphics.toColorInt
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.datepicker.MaterialDatePicker
+import com.google.android.material.slider.Slider
 import com.google.android.material.textfield.TextInputEditText
 import com.youme.memoria.PhotoRepository
 import com.youme.memoria.R
@@ -34,6 +41,7 @@ class FilterBottomFrag(): BottomSheetDialogFragment(R.layout.filter_layout) {
     private lateinit var searchFilters: SearchFilters
     private var selectedFolders = mutableListOf<String>()
     private var startDateFilter : Long? = null
+    private var confidence  : Float= 0.15f
     private var endDateFilter : Long?  = null
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -47,6 +55,7 @@ class FilterBottomFrag(): BottomSheetDialogFragment(R.layout.filter_layout) {
                 startDateFilter = it.startDate
                 endDateFilter  =  it.endDate
                 searchFilters = it
+                confidence = it.confidence
                 setupUi()
             }
         }
@@ -65,6 +74,7 @@ class FilterBottomFrag(): BottomSheetDialogFragment(R.layout.filter_layout) {
             setupFolders()
             //camerasList()
             dateFilter()
+            setupConfidenceSlider()
             setupSubmit()
         }
     }
@@ -72,7 +82,7 @@ class FilterBottomFrag(): BottomSheetDialogFragment(R.layout.filter_layout) {
         val applyBt = requireView().findViewById<Button>(R.id.button6)
 
         applyBt.setOnClickListener {
-            val searchFilters = searchFilters.copy(folders = selectedFolders, startDate = startDateFilter, endDate = endDateFilter)
+            val searchFilters = searchFilters.copy(folders = selectedFolders, startDate = startDateFilter, endDate = endDateFilter, confidence =  confidence)
             viewModuel.setSearchFilters(searchFilters)
             dismiss()
         }
@@ -134,6 +144,29 @@ class FilterBottomFrag(): BottomSheetDialogFragment(R.layout.filter_layout) {
             datePicker.show(parentFragmentManager, "END_DATE_PICKER")
         }
 
+
+    }
+    private fun setupConfidenceSlider(){
+        val slider= requireView().findViewById<Slider>(R.id.rangeSlider)
+        val infoChip = requireView().findViewById<Chip>(R.id.chip3)
+        val resetBt = requireView().findViewById<Button>(R.id.button8)
+
+        slider.value = confidence
+        infoChip.text = "%${((confidence*10000)/30).toInt()}"
+
+
+        slider.addOnChangeListener{_, value, fromUser ->
+            confidence = value
+            infoChip.text = "%${((value*10000)/30).toInt()}"
+
+
+        }
+        slider.setLabelFormatter { value: Float ->
+            "%${((value*10000)/30).toInt()}"
+        }
+        resetBt.setOnClickListener {
+            slider.value = 0.15f
+        }
 
     }
     private fun returnFormatedDate(timeInMillis: Long?): String {
