@@ -6,6 +6,10 @@
         android:icon="@drawable/outline_photo_library_24"
         android:title="Photos" />
     <item
+        android:id="@+id/album"
+        android:icon="@drawable/outline_photo_album_24"
+        android:title="Album" />
+    <item
         android:id="@+id/settings"
         android:icon="@drawable/outline_settings_24"
         android:title="Settings" />

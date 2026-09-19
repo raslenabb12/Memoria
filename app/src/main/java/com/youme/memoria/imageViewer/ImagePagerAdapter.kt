@@ -8,6 +8,7 @@ import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.youme.memoria.ImageLoading.ImageUriItem
 import com.youme.memoria.R
 class ImagePagerAdapter :
@@ -39,6 +40,7 @@ class ImagePagerAdapter :
 
         Glide.with(holder.imageView)
             .load(item.uri)
+            .transition(DrawableTransitionOptions.withCrossFade(300))
             .into(holder.imageView)
     }
 

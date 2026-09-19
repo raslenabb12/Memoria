@@ -98,6 +98,16 @@ class PhotoRepository(context: Context) {
             }
         }
     }
+    suspend fun searchByEmbd(embedding: FloatArray,indexedImages : List<PhotoEntity>,confidence: Float) : List<Pair<PhotoEntity,Float>>{
+        return withContext(Dispatchers.IO){
+            val allPhotos = indexedImages
+
+            allPhotos.filter { it.embedding.isNotEmpty() }.map { photo->
+                val score  = memoriaEncoder.cosineSimilarity(embedding,photo.embedding.toFloatArray())
+                photo to score
+            }.sortedByDescending { it.second }.filter { it.second>=confidence }
+        }
+    }
 
     suspend fun search(query: String,indexedImages : List<PhotoEntity>,confidence: Float) : List<Pair<PhotoEntity,Float>>{
         return withContext(Dispatchers.IO){

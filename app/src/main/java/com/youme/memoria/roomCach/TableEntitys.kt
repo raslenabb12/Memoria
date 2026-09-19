@@ -17,6 +17,23 @@ data class PhotoEntity(
     val cameraMake: String? = null,
     val cameraModel: String? = null
 )
+@Entity(
+    tableName = "album_photo",
+    primaryKeys = ["albumId", "uri"]
+)
+data class AlbumPhotoEntity(
+    val albumId: String,
+    val uri: String
+)
+@Entity(tableName = "album")
+data class AlbumEntity(
+    @PrimaryKey val id: String = java.util.UUID.randomUUID().toString(),
+    val name: String,
+    val centroidEmbedding: ByteArray,
+    val autoUpdate : Boolean = true
+)
+
+
 fun FloatArray.toByteArray(): ByteArray {
     val buf = ByteBuffer.allocate(size * 4).order(ByteOrder.LITTLE_ENDIAN)
     forEach { buf.putFloat(it) }

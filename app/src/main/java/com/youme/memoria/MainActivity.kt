@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.commit
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.youme.memoria.Album.AlbumFragment
 import com.youme.memoria.Gallery.GalleryFragement
 import com.youme.memoria.settings.settings
 
@@ -34,11 +35,12 @@ class MainActivity : AppCompatActivity() {
             when(item.itemId){
                 R.id.photos->{
                     replaceFrag(GalleryFragement())
-                    true
                 }
                 R.id.settings->{
                     replaceFrag(settings())
-                    true
+                }
+                R.id.album->{
+                    replaceFrag(AlbumFragment())
                 }
             }
             true

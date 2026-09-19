@@ -56,14 +56,8 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
 
         Adapter = ImagePagingAdapter(){imageview ,position->
             val intent = Intent(requireContext(), imageViewerActivity::class.java)
-
             intent.putExtra("pos",position)
-
-
-
             startActivity(intent,)
-
-
         }
 
 

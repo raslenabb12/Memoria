@@ -10,6 +10,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -185,9 +186,11 @@ class searchActivity : AppCompatActivity() {
                         is SearchState.Loading -> progressbar.isVisible = true
                         is SearchState.Success -> {
                             progressbar.isVisible = false
-                            state.results.take(10).forEach {
-                                Log.d("testdata", "setupSearch: ${it.second}")
+
+                            if (state.results.isEmpty()){
+                                Toast.makeText(this@searchActivity,"No results found", Toast.LENGTH_SHORT).show()
                             }
+
                             val mappedList = state.results.map { it.first }.map {
                                 ImageUriItem(uri = it.uri.toUri(), height = it.height, width = it.width, id = it.uri.hashCode().toLong())
                             }

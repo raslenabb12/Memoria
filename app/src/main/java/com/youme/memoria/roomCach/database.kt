@@ -6,9 +6,10 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
-@Database(entities = [PhotoEntity::class], version = 3)
+@Database(entities = [PhotoEntity::class, AlbumPhotoEntity::class, AlbumEntity::class], version = 3)
 abstract class PhotosDatabase : RoomDatabase() {
     abstract fun photoDao(): PhotoDao
+    abstract fun AlbumDao(): AlbumDao
     companion object {
         @Volatile private var INSTANCE: PhotosDatabase? = null
 

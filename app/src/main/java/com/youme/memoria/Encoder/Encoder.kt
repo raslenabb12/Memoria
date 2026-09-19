@@ -158,7 +158,7 @@ class MemoriaEncoder(private val context: Context) {
         return dotProduct
     }
 
-    private fun l2Normalize(v: FloatArray): FloatArray {
+    fun l2Normalize(v: FloatArray): FloatArray {
         var sumSq = 0f
         for (x in v) {
             sumSq += x * x
