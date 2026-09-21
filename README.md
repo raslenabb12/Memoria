@@ -25,6 +25,8 @@ Memoria is an open-source Android app that lets you search your photo gallery us
 
 You can also search **with a photo instead of words** — pick one from anywhere, and Memoria finds visually similar photos already in your gallery. Or open any photo and tap "Find Similar" to see more like it.
 
+New: **Smart Albums (Experimental)** — create an album by name, seed it with a search or a few photos, and Memoria will suggest similar photos to add as you keep indexing — all based on the same on-device embeddings.
+
 Everything runs **100% on-device** using Apple's MobileCLIP-S0 model converted to TFLite. No internet connection required after setup. Your photos never leave your phone.
 
 ```
@@ -58,12 +60,18 @@ You type:  "my dog with a hat"          You show a photo of a chair
 - **Semantic photo search** — find photos by meaning, not metadata. "Sunset at sea" finds sunset photos even if they have no tags.
 - **Search by photo** — pick one from anywhere and find visually similar photos in your gallery, no text needed.
 - **Find Similar** — open any photo and find others like it with one tap, reusing the same embeddings your library is already indexed with.
-- **Filters** — narrow search results by date range or folder.
+- **Smart Albums (Experimental)** — create albums that automatically suggest and track similar photos as your library grows, based on the average "look" of the album.
+- **Confidence slider** — adjust the minimum match confidence for search results, from loose to strict.
+- **Filters** — narrow search results by date range, folder, or camera make/model.
+- **Folder selection** — choose exactly which folders get indexed, so screenshots, icon packs, or downloads don't pollute your search results.
+- **First-run onboarding** — guided permission request and folder selection when you first open the app.
 - **Full-screen photo viewer** — tap any result to view it full-screen, swipe between results.
-- **Non-blocking indexing** — browse while indexing runs in the background, with a real progress bar and pause/resume support.
+- **Non-blocking indexing** — browse while indexing runs in the background, with a real progress bar and pause/resume support. Indexing stays active with the screen off via a wake lock (only while the app remains open in the background).
+- **Thermal-aware indexing** — automatically throttles during bulk indexing to avoid overheating your device.
+- **Resilient indexing** — corrupted or unsupported images are automatically detected and skipped instead of being retried every run.
 - **Settings screen** — live indexing status, storage breakdown, and a link back to this repo.
 - **Fully offline** — MobileCLIP-S0 runs entirely on-device via TFLite. No API keys, no cloud calls.
-- **Privacy first** — photos never leave your device. No account required. No analytics.
+- **Privacy first** — photos never leave your device. No account required. No analytics. No `INTERNET` permission requested.
 - **Open source** — Apache 2.0. Fork it, extend it, learn from it.
 
 ---
@@ -78,6 +86,8 @@ Search query   →  [Text  Encoder]  →  512 floats  ─┐
 Search photo   →  [Image Encoder]  →  512 floats  ─┼─→  cosine similarity search
 Find Similar   →  (reuse stored embedding)         ─┘
 ```
+
+Smart Albums extend the same idea one level further: an album's embedding is the **normalized average** of its member photos' embeddings. New photos are compared against every album's average the same way a search query is compared against your library.
 
 The model used is **MobileCLIP-S0** — Apple's mobile-optimized CLIP variant that achieves the same accuracy as OpenAI's ViT-B/16 while being 4.8× faster and 2.8× smaller.
 
@@ -103,7 +113,7 @@ The model used is **MobileCLIP-S0** — Apple's mobile-optimized CLIP variant th
 
 ### Install
 
-Grab the latest APK from the [Releases page](https://github.com/raslenabb12/Memoria/releases). If you're updating from an older version, **uninstall the previous version first** — the local database format changes between releases while the project is still in alpha/beta.
+Grab the latest APK from the [Releases page](https://github.com/raslenabb12/Memoria/releases). If you're updating from an older version, check the release notes — most recent releases migrate your existing database automatically, so a full reindex usually isn't needed anymore.
 
 ### Build from source
 
@@ -131,10 +141,17 @@ Then open in Android Studio and run.
 - [x] Search filters — date range, folder
 - [x] Search by photo
 - [x] Find Similar
-- [ ] Camera make/model filter
-- [ ] Folder selection (index only chosen folders instead of the full library)
-- [ ] Stop control for indexing (pause/resume already shipped)
-- [ ] First-run onboarding flow
+- [x] Camera make/model filter
+- [x] Folder selection (index only chosen folders instead of the full library)
+- [x] Stop control for indexing (pause/resume already shipped)
+- [x] First-run onboarding flow
+- [x] Confidence threshold slider for search results
+- [x] Smart Albums (experimental)
+- [ ] Duplicate / near-duplicate photo detection
+- [ ] Manually add any photo to an album
+- [ ] Crop-to-search (search using part of an image)
+- [ ] Native in-app media actions (move, copy, delete)
+- [ ] F-Droid distribution
 
 ---
 
