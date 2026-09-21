@@ -2,6 +2,8 @@ package com.youme.inkdex.roomCach
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -19,7 +21,17 @@ data class PhotoEntity(
 )
 @Entity(
     tableName = "album_photo",
-    primaryKeys = ["albumId", "uri"]
+    primaryKeys = ["albumId", "uri"],
+    foreignKeys = [
+        ForeignKey(
+            entity = AlbumEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["albumId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(entity = PhotoEntity::class, parentColumns = ["uri"], childColumns = ["uri"], onDelete = ForeignKey.CASCADE)
+    ],
+    indices = [Index("albumId"), Index("uri")]
 )
 data class AlbumPhotoEntity(
     val albumId: String,

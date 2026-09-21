@@ -5,8 +5,9 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.youme.memoria.roomCach.MIGRATION_3_4
 
-@Database(entities = [PhotoEntity::class, AlbumPhotoEntity::class, AlbumEntity::class], version = 3)
+@Database(entities = [PhotoEntity::class, AlbumPhotoEntity::class, AlbumEntity::class], version = 4)
 abstract class PhotosDatabase : RoomDatabase() {
     abstract fun photoDao(): PhotoDao
     abstract fun AlbumDao(): AlbumDao
@@ -19,7 +20,7 @@ abstract class PhotosDatabase : RoomDatabase() {
                     context.applicationContext,
                     PhotosDatabase::class.java,
                     "photo_db"
-                ).build().also { INSTANCE = it }
+                ).addMigrations(MIGRATION_3_4).build().also { INSTANCE = it }
             }
         }
     }

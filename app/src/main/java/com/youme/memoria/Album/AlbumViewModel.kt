@@ -76,14 +76,18 @@ class AlbumViewModel(application: Application): AndroidViewModel(application){
                         }
                     }
                     else{
-                        viewModelScope.launch {
-                            photoRepo.initializeTextModel()
-                            val photosList = photoRepo.search(album.name,photoDao.getAll(),0.20f)
-                            albumRepo.addPhotosToAlbum(photosList.map { AlbumPhotoEntity(album.id,it.first.uri) })
-                            dao.updateCentroidEmbedding(album.id,albumRepo.computeCentroid(photosList.map { it.first.embedding.toFloatArray() }).toByteArray())
-                        }
+                        updateEmbeddingsByNameSearch(album.name,album.id)
                 }
             }
+        }
+    }
+
+    private fun updateEmbeddingsByNameSearch(albumName:String,albumId: String){
+        viewModelScope.launch {
+            photoRepo.initializeTextModel()
+            val photosList = photoRepo.search(albumName,photoDao.getAll(),0.20f)
+            albumRepo.addPhotosToAlbum(photosList.map { AlbumPhotoEntity(albumId,it.first.uri) })
+            dao.updateCentroidEmbedding(albumId,albumRepo.computeCentroid(photosList.map { it.first.embedding.toFloatArray() }).toByteArray())
         }
     }
 
@@ -100,10 +104,7 @@ class AlbumViewModel(application: Application): AndroidViewModel(application){
             albumRepo.addAlbum(albumId,title,autoUpdate)
             if (startMode==0){
                 viewModelScope.launch {
-                        photoRepo.initializeTextModel()
-                        val photosList = photoRepo.search(title,photoDao.getAll(),0.20f)
-                        albumRepo.addPhotosToAlbum(photosList.map { AlbumPhotoEntity(albumId,it.first.uri) })
-                    dao.updateCentroidEmbedding(albumId,albumRepo.computeCentroid(photosList.map { it.first.embedding.toFloatArray() }).toByteArray())
+                    updateEmbeddingsByNameSearch(title,albumId)
                 }
             }
         }

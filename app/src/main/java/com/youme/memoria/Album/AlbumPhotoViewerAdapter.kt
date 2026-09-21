@@ -48,12 +48,7 @@ class AlbumPhotoViewerAdapter(
         val isSelected = selected.contains(photo.uri)
         holder.checkMark.isVisible = isSelected
 
-        if (isSelected){
-            holder.box.strokeWidth = 10
-        }
-        else{
-            holder.box.strokeWidth = 0
-        }
+        holder.box.strokeWidth = if (isSelected) 10 else 0
 
 
         holder.itemView.setOnLongClickListener {

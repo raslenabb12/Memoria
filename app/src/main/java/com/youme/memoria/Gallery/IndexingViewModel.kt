@@ -18,6 +18,7 @@ import androidx.lifecycle.viewModelScope
 import com.youme.memoria.Gallery.IndexingViewModel.IndexingState
 import com.youme.memoria.ImageSizeUtil
 import com.youme.memoria.PhotoRepository
+import com.youme.memoria.settings.FoldersManager.FolderPrefs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -27,14 +28,20 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.io.File
 import kotlin.coroutines.cancellation.CancellationException
 
-
+data class FolderInfo(
+    val bucketId: String,
+    val bucketName: String,
+    val itemCount: Int
+)
 class IndexingViewModelFactory(
     private val repo: PhotoRepository,
     private val appContext: Context
@@ -54,13 +61,19 @@ class IndexingViewModel(
     private val imglistMutex = Mutex()
     val imglist  =  mutableListOf<Uri>()
 
+    val folderPrefs = FolderPrefs(appContext)
+
 
     private val _state = MutableStateFlow<IndexingState>(IndexingState.Idle)
     val state: StateFlow<IndexingState> = _state.asStateFlow()
 
-    private val _Folders = MutableStateFlow<List<String>>(emptyList())
-    val folders: StateFlow<List<String>> = _Folders.asStateFlow()
+    private val _Folders = MutableStateFlow<List<FolderInfo>>(emptyList())
+    val folders: StateFlow<List<FolderInfo>> = _Folders.asStateFlow()
     val dbSize = MutableStateFlow<String>("0")
+
+
+    val isPermissionGrandted  = MutableStateFlow<Boolean>(false)
+
 
     val batteryTemp  = MutableStateFlow<Float>(0f)
 
@@ -68,6 +81,7 @@ class IndexingViewModel(
         viewModelScope.launch {
             scanGallery()
             getBatteryTemperature()
+            getAvailableFolders()
         }
     }
     private var wakeLock: PowerManager.WakeLock? = null
@@ -116,6 +130,7 @@ class IndexingViewModel(
         imglistMutex.withLock {
             imglist.clear()
 
+            val selectedBuckets = folderPrefs.selectedBuckets.first()
 
             val projection = arrayOf(
                 MediaStore.Images.Media._ID,
@@ -125,11 +140,20 @@ class IndexingViewModel(
 
             val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
 
+            var selection: String? = null
+            var selectionArgs: Array<String>? = null
+
+            if (selectedBuckets.isNotEmpty()) {
+                val placeholders = selectedBuckets.joinToString(",") { "?" }
+                selection = "${MediaStore.Images.Media.BUCKET_ID} IN ($placeholders)"
+                selectionArgs = selectedBuckets.toTypedArray()
+            }
+
             appContext.contentResolver.query(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 projection,
-                null,
-                null,
+                selection,
+                selectionArgs,
                 sortOrder
             )?.use { cursor ->
 
@@ -302,6 +326,42 @@ class IndexingViewModel(
             repo.unloadModel()
         }
         super.onCleared()
+    }
+    suspend fun getAvailableFolders() = withContext(Dispatchers.IO) {
+        val folders = LinkedHashMap<String, FolderInfo>()
+
+        val projection = arrayOf(
+            MediaStore.Images.Media.BUCKET_ID,
+            MediaStore.Images.Media.BUCKET_DISPLAY_NAME
+        )
+
+        appContext.contentResolver.query(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            projection,
+            null,
+            null,
+            null
+        )?.use { cursor ->
+            val idCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_ID)
+            val nameCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME)
+
+            while (cursor.moveToNext()) {
+                val bucketId = cursor.getString(idCol) ?: continue
+                val bucketName = cursor.getString(nameCol) ?: "Unknown"
+
+                val existing = folders[bucketId]
+                folders[bucketId] = FolderInfo(
+                    bucketId,
+                    bucketName,
+                    (existing?.itemCount ?: 0) + 1
+                )
+            }
+        }
+
+        _Folders.value = folders.values.filter { it.itemCount >0 }.sortedByDescending { it.itemCount }
+    }
+    fun setPermission(value: Boolean){
+        isPermissionGrandted.value=value
     }
     sealed class IndexingState {
         object Idle : IndexingState()

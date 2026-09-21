@@ -84,8 +84,9 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
         )
 
         lifecycleScope.launch {
-            requestGalleryPermission()
-            indexinState()
+            loadGallery()
+            indexingState()
+
 
         }
         navigateToSearch()
@@ -101,47 +102,8 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
             }
         }
     }
-    private val requestPermissionLauncher =
-        registerForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) { isGranted ->
-            if (isGranted) {
-                lifecycleScope.launch {
-                    if (indexingViewModel.imglist.isEmpty()) indexingViewModel.scanGallery()
-                    loadGallery()
-                }
-            } else {
-                Toast.makeText(
-                    requireContext(),
-                    "Gallery permission denied",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-        }
-        private fun requestGalleryPermission() {
-        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            Manifest.permission.READ_MEDIA_IMAGES
-        } else {
-            Manifest.permission.READ_EXTERNAL_STORAGE
-        }
-        when {
-            ContextCompat.checkSelfPermission(
-                requireContext(),
-                permission
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                lifecycleScope.launch {
-                    if (indexingViewModel.imglist.isEmpty()) indexingViewModel.scanGallery()
-                    loadGallery()
-                }
-            }
-            else -> {
-                requestPermissionLauncher.launch(
-                    permission
-                )
-            }
-        }
-    }
-    private fun indexinState(){
+
+    private fun indexingState(){
         val toolbar = requireView().findViewById<MaterialToolbar>(R.id.toolbar)
 
         val largeIndicatorBox = requireView().findViewById<MaterialCardView>(R.id.big_indicator)

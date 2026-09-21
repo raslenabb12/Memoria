@@ -26,6 +26,7 @@
         </activity>
         <activity android:name=".search.searchActivity" android:exported="false"/>
         <activity android:name=".imageViewer.imageViewerActivity" android:exported="false"/>
+        <activity android:name=".onboarding.SetupScreen" android:exported="false"/>
     </application>
 
 </manifest>

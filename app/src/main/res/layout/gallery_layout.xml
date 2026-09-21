@@ -61,7 +61,7 @@
             android:layout_height="40dp"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
-            app:cardBackgroundColor="#2B2D30"
+            app:cardBackgroundColor="@color/neutral_17"
             app:strokeWidth="0dp">
 
             <LinearLayout

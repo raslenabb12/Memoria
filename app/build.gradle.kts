@@ -13,8 +13,8 @@ android {
         applicationId = "com.youme.memoria"
         minSdk = 28
         targetSdk = 36
-        versionCode = 3
-        versionName = "v1.2.2-Beta"
+        versionCode = 4
+        versionName = "v1.3.0-Beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -78,4 +78,9 @@ dependencies {
     implementation("androidx.paging:paging-runtime-ktx:3.3.0")
 
     implementation("com.google.android.material:material:1.14.0")
+
+    implementation("androidx.datastore:datastore-preferences:1.2.1")
+
+
+
 }

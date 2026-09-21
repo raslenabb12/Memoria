@@ -15,6 +15,8 @@ import com.youme.inkdex.roomCach.toFloatArray
 import com.youme.memoria.Encoder.MemoriaEncoder
 import com.youme.memoria.ImageLoading.ImageUriItem
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -110,15 +112,58 @@ class PhotoRepository(context: Context) {
     }
 
     suspend fun search(query: String,indexedImages : List<PhotoEntity>,confidence: Float) : List<Pair<PhotoEntity,Float>>{
-        return withContext(Dispatchers.IO){
+        return withContext(Dispatchers.Default){
             val encodedText = memoriaEncoder.encodeText(query)
-            val allPhotos = indexedImages
 
-            allPhotos.filter { it.embedding.isNotEmpty() }.map { photo->
-                val score  = memoriaEncoder.cosineSimilarity(encodedText,photo.embedding.toFloatArray())
-                photo to score
-            }.sortedByDescending { it.second }.filter { it.second>=confidence }
+            val candidates = indexedImages.filter { it.embedding.isNotEmpty() }
+            if (candidates.isEmpty()) return@withContext emptyList()
+
+
+            val cores = Runtime.getRuntime().availableProcessors()
+            val chunkCount = cores.coerceAtMost(candidates.size).coerceAtLeast(1)
+            val chunkSize = (candidates.size+chunkCount-1)/chunkCount
+            val chunks = candidates.chunked(chunkSize)
+
+            val partialResults: List<List<Pair<PhotoEntity, Float>>> = chunks.map { chunk ->
+                async {
+                    chunk.map { photo ->
+                        photo to memoriaEncoder.cosineSimilarity(encodedText, photo.embedding.toFloatArray())
+                    }
+                        .filter { it.second >= confidence }
+                        .sortedByDescending { it.second }
+                }
+            }.awaitAll()
+
+            mergeSortedDescending(partialResults)
         }
+    }
+    private fun mergeSortedDescending(
+        lists: List<List<Pair<PhotoEntity, Float>>>
+    ): List<Pair<PhotoEntity, Float>> {
+        val result = ArrayList<Pair<PhotoEntity, Float>>(lists.sumOf { it.size })
+        val indices = IntArray(lists.size)
+
+        while (true) {
+            var bestListIdx = -1
+            var bestScore = Float.NEGATIVE_INFINITY
+
+            for (i in lists.indices) {
+                val idx = indices[i]
+                if (idx < lists[i].size) {
+                    val score = lists[i][idx].second
+                    if (score > bestScore) {
+                        bestScore = score
+                        bestListIdx = i
+                    }
+                }
+            }
+
+            if (bestListIdx == -1) break
+
+            result.add(lists[bestListIdx][indices[bestListIdx]])
+            indices[bestListIdx]++
+        }
+        return result
     }
     suspend fun pruneDeletedPhotos(currentUris: List<Uri>) {
         val currentUriStrings = currentUris.map { it.toString() }

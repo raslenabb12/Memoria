@@ -4,23 +4,17 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
-import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.View
-import android.widget.Button
 import android.widget.LinearLayout
-import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.graphics.toColorInt
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.chip.Chip
-import com.google.android.material.chip.ChipGroup
 import com.youme.memoria.BuildConfig
 import com.youme.memoria.Gallery.IndexingViewModel
 import com.youme.memoria.Gallery.IndexingViewModelFactory
@@ -31,7 +25,9 @@ import kotlinx.coroutines.launch
 import kotlin.getValue
 import androidx.core.net.toUri
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.progressindicator.LinearProgressIndicator
+import com.youme.memoria.settings.FoldersManager.FoldersManager
 
 class settings : Fragment(R.layout.settings_layout) {
     private lateinit var repo: PhotoRepository
@@ -45,6 +41,7 @@ class settings : Fragment(R.layout.settings_layout) {
         setupUI()
         setUpAppVersion()
         openRepo()
+        setupFolders()
     }
     private fun setupUI(){
         val dBSizeText = requireView().findViewById<TextView>(R.id.db_size)
@@ -95,7 +92,7 @@ class settings : Fragment(R.layout.settings_layout) {
     }
 
     private fun openRepo(){
-        val repoContainer = requireView().findViewById<LinearLayout>(R.id.repo)
+        val repoContainer = requireView().findViewById<MaterialCardView>(R.id.repo)
         repoContainer.setOnClickListener {
             val intent = Intent(Intent.ACTION_VIEW, "https://github.com/raslenabb12/Memoria".toUri())
             try {
@@ -121,63 +118,96 @@ class settings : Fragment(R.layout.settings_layout) {
         lifecycleScope.launch {
             indexingViewModel.state.collectLatest {state ->
 
-                when(state){
-                    is IndexingViewModel.IndexingState.Ready ->{
-                        statusLog.text="Status: Ready"
-                        progressLog.text="${state.processed}/${state.total}"
-                        progressBar.max=state.total
-                        progressBar.progress=state.processed
+                try {
+                    when(state){
+                        is IndexingViewModel.IndexingState.Ready ->{
+                            statusLog.text="Status: Ready"
+                            progressLog.text="${state.processed}/${state.total}"
+                            progressBar.max=state.total
+                            progressBar.progress=state.processed
 
-                        etaLog.text ="${(state.processed*100)/state.total}%"
+                            etaLog.text ="${(state.processed*100)/state.total}%"
 
-                        resumeBt.apply {
-                            isEnabled=true
-                            setOnClickListener {
-                                progressLog.text="Loading.."
-                                indexingViewModel.startIndexing()
+                            resumeBt.apply {
+                                isEnabled=true
+                                setOnClickListener {
+                                    progressLog.text="Loading.."
+                                    indexingViewModel.startIndexing()
+                                }
+                            }
+                            pauseBt.isEnabled=false
+                        }
+                        is IndexingViewModel.IndexingState.Running->{
+                            statusLog.text="Status: Running"
+                            progressLog.text="${state.processed}/${state.total}"
+                            progressBar.max=state.total
+                            progressBar.progress=state.processed
+                            val old= " ETA: ${"%.1f".format(state.etaMinutes)}Min"
+
+                            etaLog.apply {
+                                isVisible=true
+                                text = "${(state.processed*100)/state.total}%  ETA: ${formatEta(state.etaMinutes.toLong())}"
+                            }
+
+                            pauseBt.apply {
+                                isEnabled=true
+                                setOnClickListener {
+                                    indexingViewModel.pause()
+                                }
+                            }
+                            resumeBt.isEnabled=false
+                        }
+                        is IndexingViewModel.IndexingState.Idle->{
+                            statusLog.text = "Status: Idle"
+                        }
+                        is IndexingViewModel.IndexingState.Completed ->{
+                            pauseBt.isEnabled=false
+                            resumeBt.isEnabled=false
+                            etaLog.isVisible=false
+                            statusLog.text="Status: Completed"
+                            progressLog.text="${state.total}/${state.total}"
+
+                            progressBar.apply {
+                                max = state.total
+                                progress = state.total
                             }
                         }
-                        pauseBt.isEnabled=false
                     }
-                    is IndexingViewModel.IndexingState.Running->{
-                        statusLog.text="Status: Running"
-                        progressLog.text="${state.processed}/${state.total}"
-                        progressBar.max=state.total
-                        progressBar.progress=state.processed
-                        val old= " ETA: ${"%.1f".format(state.etaMinutes)}Min"
-
-                        etaLog.apply {
-                            isVisible=true
-                            text = "${(state.processed*100)/state.total}%  ETA: ${formatEta(state.etaMinutes.toLong())}"
-                        }
-
-                        pauseBt.apply {
-                            isEnabled=true
-                            setOnClickListener {
-                                indexingViewModel.pause()
-                            }
-                        }
-                        resumeBt.isEnabled=false
-                    }
-                    is IndexingViewModel.IndexingState.Idle->{
-                        statusLog.text = "Status: Idle"
-                    }
-                    is IndexingViewModel.IndexingState.Completed ->{
-                        pauseBt.isEnabled=false
-                        resumeBt.isEnabled=false
-                        etaLog.isVisible=false
-                        statusLog.text="Status: Completed"
-                        progressLog.text="${state.total}/${state.total}"
-
-                        progressBar.apply {
-                            max = state.total
-                            progress = state.total
-                        }
-                    }
+                } catch (e: Exception) {
+                   // no done yet
                 }
             }
         }
 
+    }
+    private fun setupFolders(){
+
+        val manageFoldersButton = requireView().findViewById<MaterialCardView>(R.id.manageFoldersButt)
+        val foldersTitle = requireView().findViewById<TextView>(R.id.foldersTitle)
+
+        manageFoldersButton.setOnClickListener {
+            FoldersManager().show(parentFragmentManager,"")
+        }
+
+
+        lifecycleScope.launch {
+            indexingViewModel.folders.collectLatest { folders->
+
+                foldersTitle.text = "Manage Folders (${folders.size})"
+
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            indexingViewModel.folderPrefs.selectedBuckets.collectLatest { selectedFolders->
+                indexingViewModel.pause()
+                indexingViewModel.scanGallery()
+
+                view?.let {
+                    it.findViewById<TextView>(R.id.textView33).text = "${selectedFolders.size} selected"
+                }
+            }
+        }
     }
     private fun formatEta(etaMs: Long): String {
         if (etaMs <= 0) return "< 1s"

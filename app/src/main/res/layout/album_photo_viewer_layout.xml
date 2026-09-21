@@ -18,30 +18,30 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:layout_marginTop="-10dp"
         android:layout_weight="1"
         android:fontFamily="@font/hanken_grotesk"
         android:text="title"
         android:textAlignment="center"
         android:textColor="@android:color/white"
-        android:textSize="18sp"
+        android:textSize="20sp"
         android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/button14"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/bottomSheetDragHandleView3" />
+        app:layout_constraintTop_toTopOf="@+id/button14" />
 
     <androidx.cardview.widget.CardView
         android:id="@+id/cardView10"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginEnd="8dp"
         app:cardBackgroundColor="#2B2D30"
         app:cardCornerRadius="15dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView24">
+        app:layout_constraintTop_toBottomOf="@+id/button14">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -55,8 +55,10 @@
             <androidx.cardview.widget.CardView
                 android:id="@+id/count_box"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginTop="2dp"
                 android:layout_marginEnd="10dp"
+                android:layout_marginBottom="4dp"
                 android:visibility="gone"
                 app:cardBackgroundColor="@color/primary_40"
                 app:cardCornerRadius="10dp">
@@ -65,9 +67,14 @@
                     android:id="@+id/textView25"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_margin="8dp"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="12dp"
+                    android:fontFamily="@font/hanken_grotesk"
                     android:text="0"
-                    android:textSize="16sp" />
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
             </androidx.cardview.widget.CardView>
 
             <Button
@@ -76,8 +83,14 @@
                 android:layout_height="40dp"
                 android:layout_gravity="center"
                 android:layout_weight="1"
+                android:backgroundTint="@color/primary_40"
+                android:fontFamily="@font/hanken_grotesk"
                 android:text="@android:string/selectAll"
-                android:textSize="14sp" />
+                android:textColor="@color/primary_90"
+                android:textSize="14sp"
+                app:cornerRadius="10dp"
+                app:iconGravity="textStart"
+                app:iconTint="@android:color/white" />
 
             <Button
                 android:id="@+id/button12"
@@ -89,7 +102,10 @@
                 android:paddingTop="5dp"
                 android:paddingBottom="5dp"
                 android:text="Deselecte All"
-                android:textSize="14sp" />
+                android:textAppearance="@style/TextAppearance.Memoria.BodyLarge"
+                android:textSize="14sp"
+                app:cornerRadius="10dp"
+                app:iconGravity="textStart" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
@@ -119,5 +135,16 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/button14"
+        style="@style/Widget.Material3.Button.IconButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="-10dp"
+        app:icon="@drawable/baseline_close_24"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/bottomSheetDragHandleView3" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
