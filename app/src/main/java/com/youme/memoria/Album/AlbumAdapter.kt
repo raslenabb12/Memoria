@@ -5,6 +5,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
@@ -24,6 +26,7 @@ class AlbumAdapter(
     class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val title: TextView = itemView.findViewById(R.id.textView22)
         val countText: TextView = itemView.findViewById(R.id.textView23)
+        val checkMark: ImageView = itemView.findViewById(R.id.imageView18)
         val imageViewList = listOf(R.id.imageView8,R.id.imageView9,R.id.imageView10,R.id.imageView11,)
         val box: MaterialCardView = itemView.findViewById(R.id.cardView9)
 
@@ -49,9 +52,8 @@ class AlbumAdapter(
         }
         val isSelected = selectedAlbum.contains(albumlist.albumId)
         holder.box.strokeWidth = if (isSelected) 10 else 0
-
-
-
+        holder.checkMark.isVisible = isSelected
+        holder.countText.isVisible=!isSelected
 
 
         holder.itemView.setOnClickListener {
@@ -73,7 +75,9 @@ class AlbumAdapter(
             }
             true
         }
+
     }
+
     override fun onViewRecycled(holder: MyViewHolder) {
         super.onViewRecycled(holder)
         holder.imageViewList.forEach { item->

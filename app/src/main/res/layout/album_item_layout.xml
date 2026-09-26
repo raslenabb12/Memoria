@@ -12,7 +12,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        app:cardBackgroundColor="#2B2D30"
+        app:cardBackgroundColor="@color/neutral_24"
         app:cardCornerRadius="20dp"
         app:layout_constraintDimensionRatio="4:4"
         app:layout_constraintEnd_toEndOf="parent"
@@ -37,13 +37,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:scaleType="centerCrop"
-                    tools:srcCompat="@tools:sample/avatars[5]" />
+                    android:scaleType="centerCrop" />
 
                 <com.google.android.material.divider.MaterialDivider
                     android:id="@+id/materialDivider3"
                     android:layout_width="2dp"
                     android:layout_height="match_parent"
+                    app:dividerColor="@color/neutral_17"
                     app:dividerThickness="2dp" />
 
                 <ImageView
@@ -58,6 +58,7 @@
             <com.google.android.material.divider.MaterialDivider
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                app:dividerColor="@color/neutral_17"
                 app:dividerThickness="2dp" />
 
             <LinearLayout
@@ -78,6 +79,7 @@
                     android:id="@+id/materialDivider2"
                     android:layout_width="2dp"
                     android:layout_height="match_parent"
+                    app:dividerColor="@color/neutral_17"
                     app:dividerThickness="2dp" />
 
                 <ImageView
@@ -126,6 +128,16 @@
             android:textColor="@android:color/black"
             android:textSize="14sp"
             android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/imageView18"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="center"
+            android:tint="@android:color/black"
+            android:visibility="gone"
+            app:srcCompat="@drawable/baseline_check_24" />
+
     </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

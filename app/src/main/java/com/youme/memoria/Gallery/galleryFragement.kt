@@ -198,6 +198,11 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
 
 
                         smallIndicatorText.text = "Completed"
+
+
+                        //close large indicator
+                        animateIndicator(largeIndicatorBox,smallIndicatorBox)
+                        toolbar.title=""
                     }
                     else -> {}
                 }

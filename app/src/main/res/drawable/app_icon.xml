@@ -3,7 +3,7 @@
 
     <item android:width="45dp" android:height="45dp" >
         <bitmap
-            android:src="@mipmap/ic_launcher_foreground"
+            android:src="@drawable/app_logo_no_background"
             android:gravity="fill" />
     </item>
 </layer-list>

@@ -4,10 +4,14 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.res.Resources
 import android.os.Bundle
+import androidx.appcompat.view.ActionMode
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
@@ -35,6 +39,8 @@ class AlbumPhotoViewer(private val albumId:String,private val title:String) : Bo
     override fun getTheme(): Int = R.style.Theme_Memoria_BottomSheet
 
     private val viewModuel: AlbumViewModel by viewModels()
+
+
     private lateinit var Adapter: AlbumViewerAdapter
 
     @SuppressLint("StringFormatInvalid")
@@ -98,19 +104,19 @@ class AlbumPhotoViewer(private val albumId:String,private val title:String) : Bo
         }
     }
     private fun setupSelectedUi(selected: List<String>, photosList: List<AlbumPhotoEntity>){
-        val countText = requireView().findViewById<TextView>(R.id.textView25)
-        val countBox = requireView().findViewById<CardView>(R.id.count_box)
+        val toolbar = requireView().findViewById<MaterialToolbar>(R.id.materialToolbar2)
         val deleteButton = requireView().findViewById<Button>(R.id.button11)
+        val selectionToolBar = requireView().findViewById<CardView>(R.id.cardView10)
 
 
-        countBox.animateVisibility( selected.isNotEmpty())
-        countText.text= selected.
-        size.toString()
+        toolbar.title = if (selected.isNotEmpty()) "${selected.size} selected" else title
+        selectionToolBar.animateVisibility(selected.isNotEmpty())
 
         deleteButton.apply {
             text = "Remove (${selected.size})"
             animateVisibility(selected.isNotEmpty())
         }
+
 
         deleteButton.setOnClickListener {
             deleteAlert(
@@ -136,6 +142,7 @@ class AlbumPhotoViewer(private val albumId:String,private val title:String) : Bo
         SearchResultCache.searchResults = null
         super.onDestroy()
     }
+
 }
 fun View.animateVisibility(visible: Boolean) {
     if (visible==this.isVisible) return
