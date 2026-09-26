@@ -53,7 +53,6 @@
         <item name="android:navigationBarColor">@color/neutral_10</item>
         <item name="android:windowLightStatusBar">false</item>
 
-
         <item name="textAppearanceHeadlineLarge">@style/TextAppearance.Memoria.HeadlineLarge</item>
         <item name="textAppearanceHeadlineMedium">@style/TextAppearance.Memoria.HeadlineMedium</item>
         <item name="textAppearanceBodyLarge">@style/TextAppearance.Memoria.BodyLarge</item>
@@ -115,12 +114,13 @@
     <style name="Theme.Memoria.BottomSheet" parent="Theme.Material3.DayNight.BottomSheetDialog">
         <item name="android:windowIsFloating">false</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
+
         <item name="android:navigationBarColor">@color/material_on_surface_disabled</item>
         <item name="bottomSheetStyle">@style/Widget.Memoria.BottomSheetModal</item>
     </style>
 
     <style name="Widget.Memoria.BottomSheetModal" parent="Widget.Material3.BottomSheet.Modal">
-        <item name="backgroundTint">#181825</item>
+        <item name="backgroundTint">@color/neutral_12</item>
         <item name="android:background">@drawable/bg_bottom_sheet</item>
         <item name="shapeAppearance">@style/ShapeAppearance.Memoria.Large</item>
 
@@ -133,6 +133,22 @@
     <style name="ShapeAppearance.Memoria.Large" parent="ShapeAppearance.Material3.LargeComponent">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">20dp</item>
+    </style>
+    <style name="MyAlertDialogTheme" parent="MaterialAlertDialog.Material3Expressive">
+        <item name="shapeAppearanceOverlay">@style/MyAlertDialogShape</item>
+        <item name="colorPrimary">@color/primary_80</item>
+        <item name="buttonBarPositiveButtonStyle">@style/MyAlertDialogButton</item>
+        <item name="buttonBarNegativeButtonStyle">@style/NegativeDialogButton</item>
+    </style>
+    <style name="MyAlertDialogShape" parent="">
+        <item name="cornerSize">15dp</item>
+    </style>
+
+    <style name="MyAlertDialogButton" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/error_40</item>
+    </style>
+    <style name="NegativeDialogButton" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/secondary_80</item>
     </style>
 
 
@@ -180,7 +196,7 @@
 
     <style name="ShapeAppearance.Memoria.DialogCorner" parent="ShapeAppearance.Material3.Corner.ExtraLarge">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">28dp</item>
+        <item name="cornerSize">15dp</item>
     </style>
 
     <style name="Widget.Memoria.IconButton.Filled" parent="Widget.Material3.Button.IconButton.Filled">

@@ -32,10 +32,10 @@
 
     <ImageView
         android:id="@+id/imageView14"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginEnd="4dp"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
         android:tint="@color/primary_40"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="@+id/box"

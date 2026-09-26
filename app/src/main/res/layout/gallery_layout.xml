@@ -83,7 +83,7 @@
                         android:layout_marginStart="10dp"
                         android:layout_marginBottom="2dp"
                         android:fontFamily="@font/hanken_grotesk"
-                        android:text="1/200"
+                        android:text="Loading"
                         android:textAlignment="center"
                         android:textAllCaps="false"
                         android:textStyle="bold" />
@@ -95,6 +95,7 @@
                         android:layout_gravity="center"
                         android:layout_marginStart="10dp"
                         android:layout_marginEnd="10dp"
+                        android:indeterminate="true"
                         android:max="100"
                         android:progress="20"
                         app:indicatorTrackGapSize="0dp"

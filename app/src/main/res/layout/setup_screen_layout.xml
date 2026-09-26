@@ -73,17 +73,16 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:layout_marginTop="5dp"
                 android:layout_marginBottom="5dp"
                 android:orientation="horizontal">
 
                 <ImageView
-                    android:id="@+id/imageView16"
                     android:layout_width="40dp"
                     android:layout_height="wrap_content"
-                    app:srcCompat="@drawable/baseline_image_24" />
+                    app:srcCompat="@drawable/outline_perm_media_24" />
 
                 <TextView
-                    android:id="@+id/textView30"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
@@ -94,10 +93,19 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
+            <TextView
+                android:id="@+id/textView34"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:fontFamily="@font/hanken_grotesk"
+                android:text="Read-only access to scan images locally. Zero photos leave your phone" />
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/perButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
                 android:layout_weight="1"
                 android:fontFamily="@font/hanken_grotesk"
                 android:text="Grant Media Permission"
@@ -131,6 +139,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:layout_marginTop="5dp"
                 android:layout_marginBottom="5dp"
                 android:orientation="horizontal">
 
@@ -171,10 +180,19 @@
                 </androidx.cardview.widget.CardView>
             </LinearLayout>
 
+            <TextView
+                android:id="@+id/textView35"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:fontFamily="@font/hanken_grotesk"
+                android:text="Select targe local directories to compute. Change anytime in settings." />
+
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/SelFolder"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
                 android:layout_weight="1"
                 android:enabled="false"
                 android:fontFamily="@font/hanken_grotesk"

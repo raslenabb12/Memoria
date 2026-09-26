@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.button.MaterialButton
 import com.youme.inkdex.roomCach.AlbumPhotoEntity
 import com.youme.memoria.ImageLoading.ImageUriItem
 import com.youme.memoria.R
@@ -65,15 +66,19 @@ class AlbumPhotoViewer(private val albumId:String,private val title:String) : Bo
 
 
         setupRecyclerView()
-        setupUIDate()
+        setupUI()
         setupSelectDeselect()
 
     }
-    private fun  setupUIDate(){
+    private fun  setupUI(){
         lifecycleScope.launch {
             viewModuel.getAlbumPhotos(albumId).collectLatest { photos->
                 Adapter.submitData(photos)
             }
+        }
+
+        requireView().findViewById<MaterialButton>(R.id.button14).setOnClickListener {
+            dismiss()
         }
 
     }
@@ -100,7 +105,9 @@ class AlbumPhotoViewer(private val albumId:String,private val title:String) : Bo
         deleteButton.animateVisibility(selected.isNotEmpty())
 
         deleteButton.setOnClickListener {
-            viewModuel.deleteAlbumPhotos(selected,Adapter,photosList)
+            deleteAlert(requireContext(),"Delete Photos?","Are you sure you want to delete ${selected.size} photo${if (selected.size == 1) "" else "s"} from this album?"){
+                viewModuel.deleteAlbumPhotos(selected,Adapter,photosList)
+            }
         }
     }
 

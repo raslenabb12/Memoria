@@ -142,6 +142,7 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
                         progressbar.apply {
                             max = state.total
                             progress  =state.processed
+                            isIndeterminate=false
                         }
                         smallIndicatorProgress.apply {
                             max = state.total
@@ -183,6 +184,8 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
                     is IndexingViewModel.IndexingState.Completed ->{
                         processButton.isVisible=false
                         logText.text = "Indexing completed: ${state.total}"
+                        progressbar.isIndeterminate=false
+
 
                         progressbar.apply {
                             max =  state.total
@@ -192,7 +195,7 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
                             max = state.total
                             progress  =state.total
                         }
-                        progressbar.isIndeterminate=false
+
 
                         smallIndicatorText.text = "Completed"
                     }

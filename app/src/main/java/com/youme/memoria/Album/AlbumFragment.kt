@@ -1,5 +1,6 @@
 package com.youme.memoria.Album
 
+import android.content.Context
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
@@ -8,6 +9,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.youme.memoria.R
 import kotlinx.coroutines.Dispatchers
@@ -41,7 +43,9 @@ class AlbumFragment : Fragment(R.layout.album_layout) {
         deleteButton.animateVisibility(selected.isNotEmpty())
 
         deleteButton.setOnClickListener {
-             viewModuel.deleteAlbum(selected,Adapter)
+            deleteAlert(requireContext(),"Delete Album?","Are you sure you want to delete this album? This action cannot be undone."){
+                viewModuel.deleteAlbum(selected,Adapter)
+            }
         }
     }
     private fun setupRecycView(){
@@ -67,4 +71,18 @@ class AlbumFragment : Fragment(R.layout.album_layout) {
             viewModuel.updatedB()
         }
     }
+
+}
+fun deleteAlert(context: Context,title: String,description:String,onClick : ()->Unit){
+   MaterialAlertDialogBuilder(context, R.style.MyAlertDialogTheme)
+        .setTitle(title)
+        .setMessage(description)
+        .setPositiveButton("Delete"){_,_->
+            onClick()
+        }
+        .setNegativeButton("Cancel"){dialog,_->
+            dialog.dismiss()
+
+        }
+        .show()
 }
