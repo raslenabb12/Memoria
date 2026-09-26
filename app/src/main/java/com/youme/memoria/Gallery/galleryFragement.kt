@@ -140,9 +140,9 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
                         smallIndicatorText.text = "Paused"
 
                         progressbar.apply {
+                            isIndeterminate=false
                             max = state.total
                             progress  =state.processed
-                            isIndeterminate=false
                         }
                         smallIndicatorProgress.apply {
                             max = state.total

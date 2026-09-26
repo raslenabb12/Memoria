@@ -1,7 +1,6 @@
 package com.youme.memoria.Album
 
 import android.app.Application
-import android.util.Log
 import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,12 +9,12 @@ import com.youme.inkdex.roomCach.AlbumsList
 import com.youme.inkdex.roomCach.PhotosDatabase
 import com.youme.inkdex.roomCach.toByteArray
 import com.youme.inkdex.roomCach.toFloatArray
+import com.youme.memoria.Album.AlbumViewer.AlbumViewerAdapter
 import com.youme.memoria.PhotoRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -44,7 +43,7 @@ class AlbumViewModel(application: Application): AndroidViewModel(application){
 
 
 
-    fun deleteAlbumPhotos(photos: List<String>, Adapter: AlbumPhotoViewerAdapter,photosList : List<AlbumPhotoEntity>){
+    fun deleteAlbumPhotos(photos: List<String>, Adapter: AlbumViewerAdapter, photosList : List<AlbumPhotoEntity>){
         viewModelScope.launch {
 
             val newlist = photosList.filter { it.uri !in photos }
@@ -98,6 +97,7 @@ class AlbumViewModel(application: Application): AndroidViewModel(application){
             Adapter.removeSelected()
         }
     }
+
     fun createAlbum(title: String, startMode: Int, autoUpdate: Boolean){
         viewModelScope.launch {
             val albumId = UUID.randomUUID().toString()

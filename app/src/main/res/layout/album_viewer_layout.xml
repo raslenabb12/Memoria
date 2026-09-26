@@ -13,35 +13,33 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/textView24"
-        android:layout_width="0dp"
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/materialToolbar2"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_weight="1"
-        android:fontFamily="@font/hanken_grotesk"
-        android:text="title"
-        android:textAlignment="center"
-        android:textColor="@android:color/white"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@+id/button14"
+        android:layout_marginTop="-30dp"
+        android:background="@android:color/transparent"
+        android:minHeight="?attr/actionBarSize"
+        android:theme="?attr/actionBarTheme"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/button14" />
+        app:layout_constraintTop_toBottomOf="@+id/bottomSheetDragHandleView3"
+        app:navigationIcon="@drawable/baseline_close_24"
+        app:title="name"
+        app:titleCentered="true"
+        app:titleTextColor="@android:color/white" />
 
     <androidx.cardview.widget.CardView
         android:id="@+id/cardView10"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         app:cardBackgroundColor="@color/neutral_17"
         app:cardCornerRadius="15dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button14">
+        app:layout_constraintTop_toBottomOf="@+id/materialToolbar2">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -60,7 +58,7 @@
                 android:layout_marginEnd="10dp"
                 android:layout_marginBottom="4dp"
                 android:visibility="gone"
-                app:cardBackgroundColor="@color/primary_40"
+                app:cardBackgroundColor="@color/primary_80"
                 app:cardCornerRadius="10dp">
 
                 <TextView
@@ -72,7 +70,7 @@
                     android:layout_marginEnd="12dp"
                     android:fontFamily="@font/hanken_grotesk"
                     android:text="0"
-                    android:textColor="@android:color/white"
+                    android:textColor="@android:color/black"
                     android:textSize="16sp"
                     android:textStyle="bold" />
             </androidx.cardview.widget.CardView>
@@ -83,10 +81,10 @@
                 android:layout_height="40dp"
                 android:layout_gravity="center"
                 android:layout_weight="1"
-                android:backgroundTint="@color/primary_40"
+                android:backgroundTint="@color/primary_80"
                 android:fontFamily="@font/hanken_grotesk"
                 android:text="@android:string/selectAll"
-                android:textColor="@color/primary_90"
+                android:textColor="@android:color/black"
                 android:textSize="14sp"
                 app:cornerRadius="10dp"
                 app:iconGravity="textStart"
@@ -122,30 +120,22 @@
     <Button
         android:id="@+id/button11"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="60dp"
         android:layout_marginStart="24dp"
         android:layout_marginEnd="24dp"
         android:layout_marginBottom="16dp"
-        android:backgroundTint="@android:color/holo_red_dark"
+        android:backgroundTint="@color/primary_80"
         android:fontFamily="@font/hanken_grotesk"
         android:text="Remove"
-        android:textColor="@android:color/white"
+        android:textColor="@android:color/black"
         android:textStyle="bold"
         android:visibility="gone"
         app:cornerRadius="15dp"
+        app:icon="@drawable/baseline_delete_24"
+        app:iconGravity="textStart"
+        app:iconTint="@android:color/black"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
-
-    <Button
-        android:id="@+id/button14"
-        style="@style/Widget.Material3.Button.IconButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="-10dp"
-        app:icon="@drawable/baseline_close_24"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/bottomSheetDragHandleView3" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

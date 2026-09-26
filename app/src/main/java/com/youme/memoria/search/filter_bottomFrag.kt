@@ -17,15 +17,19 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.graphics.toColorInt
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.slider.Slider
 import com.google.android.material.textfield.TextInputEditText
+import com.youme.memoria.Gallery.FolderInfo
 import com.youme.memoria.PhotoRepository
 import com.youme.memoria.R
 import com.youme.memoria.SearchFilters
+import com.youme.memoria.settings.FoldersManager.FoldersAdapter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -43,6 +47,8 @@ class FilterBottomFrag(): BottomSheetDialogFragment(R.layout.filter_layout) {
     private var startDateFilter : Long? = null
     private var confidence  : Float= 0.15f
     private var endDateFilter : Long?  = null
+
+    private lateinit var Adapter : FoldersAdapter
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         repo = PhotoRepository(requireContext())
@@ -195,27 +201,23 @@ class FilterBottomFrag(): BottomSheetDialogFragment(R.layout.filter_layout) {
 //        }
 //    }
     private suspend fun setupFolders(){
-        val folders = repo.getFoldersList().map { it.folderPath to it.count }.distinct().filter { !it.first.trimEnd('/').isEmpty() }
-        val foldersContainter = requireView().findViewById<LinearLayout>(R.id.folders_container)
 
-        foldersContainter.removeAllViews()
-        folders.forEach {(folder,count)->
-            val checkBox  = CheckBox(requireContext()).apply {
-                isChecked = selectedFolders.contains(folder)
-                text="${folder.trimEnd('/').substringAfterLast("/")} ($count)"
-                layoutDirection = View.LAYOUT_DIRECTION_RTL
-                layoutParams  =  LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                )
+        val folders = repo.getFoldersList().map { FolderInfo(it.folderPath,it.folderPath.substringBeforeLast("/").substringAfterLast("/"),it.count.toInt()) }
+        Adapter = FoldersAdapter(folders)
 
-            }
-            checkBox.setOnCheckedChangeListener { _,checked->
-                if (checked) selectedFolders.add(folder) else selectedFolders.remove(folder)
-            }
-            foldersContainter.addView(checkBox)
+        Adapter.setSelected(selectedFolders.toSet())
+
+        val recyclerView = requireView().findViewById<RecyclerView>(R.id.rec)
+        recyclerView.apply {
+            layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL,false)
+            adapter = Adapter
         }
 
+        lifecycleScope.launch {
+            Adapter.selectedFoldersFlow.collectLatest { selected->
+                selectedFolders = selected.toMutableList()
+            }
+        }
 
     }
 }

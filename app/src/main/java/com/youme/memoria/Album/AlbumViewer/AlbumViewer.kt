@@ -1,4 +1,4 @@
-package com.youme.memoria.Album
+package com.youme.memoria.Album.AlbumViewer
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -15,11 +15,14 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.button.MaterialButton
 import com.youme.inkdex.roomCach.AlbumPhotoEntity
+import com.youme.memoria.Album.AlbumViewModel
+import com.youme.memoria.Album.deleteAlert
 import com.youme.memoria.ImageLoading.ImageUriItem
 import com.youme.memoria.R
 import com.youme.memoria.imageViewer.imageViewerActivity
@@ -28,11 +31,11 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlin.getValue
 
-class AlbumPhotoViewer(private val albumId:String,private val title:String) : BottomSheetDialogFragment(R.layout.album_photo_viewer_layout) {
+class AlbumPhotoViewer(private val albumId:String,private val title:String) : BottomSheetDialogFragment(R.layout.album_viewer_layout) {
     override fun getTheme(): Int = R.style.Theme_Memoria_BottomSheet
 
     private val viewModuel: AlbumViewModel by viewModels()
-    private lateinit var Adapter: AlbumPhotoViewerAdapter
+    private lateinit var Adapter: AlbumViewerAdapter
 
     @SuppressLint("StringFormatInvalid")
     override fun onStart() {
@@ -51,18 +54,22 @@ class AlbumPhotoViewer(private val albumId:String,private val title:String) : Bo
     }
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        Adapter  = AlbumPhotoViewerAdapter(emptyList(), onItemClick = {uri->
-            SearchResultCache.searchResults = listOf(ImageUriItem(id=0,uri=uri.toUri(), width = 0, height = 0))
+        Adapter  = AlbumViewerAdapter(emptyList(), onItemClick = { pos->
             val intent = Intent(requireContext(), imageViewerActivity::class.java)
-            intent.putExtra("pos",0)
+            intent.putExtra("pos",pos)
             intent.putExtra("from_search",true)
 
             startActivity(intent)
 
         },
             onItemSelected = {selected,photos -> setupSelectedUi(selected,photos)})
-
-        requireView().findViewById<TextView>(R.id.textView24).text= title
+        val toolbar = view.findViewById<MaterialToolbar>(R.id.materialToolbar2)
+        toolbar.apply {
+            title= this@AlbumPhotoViewer.title
+            setNavigationOnClickListener {
+                dismiss()
+            }
+        }
 
 
         setupRecyclerView()
@@ -74,13 +81,11 @@ class AlbumPhotoViewer(private val albumId:String,private val title:String) : Bo
         lifecycleScope.launch {
             viewModuel.getAlbumPhotos(albumId).collectLatest { photos->
                 Adapter.submitData(photos)
+                SearchResultCache.searchResults = photos.map {
+                    ImageUriItem(id=0,uri=it.uri.toUri(), width = 0, height = 0)
+                }
             }
         }
-
-        requireView().findViewById<MaterialButton>(R.id.button14).setOnClickListener {
-            dismiss()
-        }
-
     }
     private fun setupSelectDeselect(){
         val selectAllButton  = requireView().findViewById<Button>(R.id.button13)
@@ -102,11 +107,18 @@ class AlbumPhotoViewer(private val albumId:String,private val title:String) : Bo
         countText.text= selected.
         size.toString()
 
-        deleteButton.animateVisibility(selected.isNotEmpty())
+        deleteButton.apply {
+            text = "Remove (${selected.size})"
+            animateVisibility(selected.isNotEmpty())
+        }
 
         deleteButton.setOnClickListener {
-            deleteAlert(requireContext(),"Delete Photos?","Are you sure you want to delete ${selected.size} photo${if (selected.size == 1) "" else "s"} from this album?"){
-                viewModuel.deleteAlbumPhotos(selected,Adapter,photosList)
+            deleteAlert(
+                requireContext(),
+                "Delete Photos?",
+                "Are you sure you want to delete ${selected.size} photo${if (selected.size == 1) "" else "s"} from this album?"
+            ) {
+                viewModuel.deleteAlbumPhotos(selected, Adapter, photosList)
             }
         }
     }
@@ -118,6 +130,11 @@ class AlbumPhotoViewer(private val albumId:String,private val title:String) : Bo
             layoutManager = GridLayoutManager(requireContext(),3)
             adapter = Adapter
         }
+    }
+
+    override fun onDestroy() {
+        SearchResultCache.searchResults = null
+        super.onDestroy()
     }
 }
 fun View.animateVisibility(visible: Boolean) {

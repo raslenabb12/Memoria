@@ -55,8 +55,14 @@ class FoldersAdapter(
                 if (holder.checkBox.isChecked) currentSet +folder.bucketId else currentSet - folder.bucketId
             }
         }
-
-
+    }
+    fun setAllSelected(){
+        _selectedFolders.value = items.map { it.bucketId }.toSet()
+        notifyDataSetChanged()
+    }
+    fun setAllDeselected(){
+        _selectedFolders.value = emptySet()
+        notifyDataSetChanged()
     }
     fun setSelected(ids: Set<String>){
         _selectedFolders.value=ids

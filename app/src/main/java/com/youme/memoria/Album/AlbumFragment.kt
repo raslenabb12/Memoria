@@ -3,14 +3,19 @@ package com.youme.memoria.Album
 import android.content.Context
 import android.os.Bundle
 import android.view.View
+import android.view.textclassifier.SelectionEvent
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.youme.memoria.Album.AlbumViewer.AlbumPhotoViewer
+import com.youme.memoria.Album.AlbumViewer.animateVisibility
 import com.youme.memoria.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -26,7 +31,7 @@ class AlbumFragment : Fragment(R.layout.album_layout) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         Adapter = AlbumAdapter(emptyList(), onItemClick = {albumId ,title->
-            AlbumPhotoViewer(albumId,title).show(parentFragmentManager,"")
+            AlbumPhotoViewer(albumId, title).show(parentFragmentManager,"")
         }, onItemSelected = {selected ->
             setupSelectionUI(selected)
         })
@@ -40,7 +45,11 @@ class AlbumFragment : Fragment(R.layout.album_layout) {
     }
     private fun setupSelectionUI(selected: List<String>) {
         val deleteButton = requireView().findViewById<MaterialButton>(R.id.button15)
-        deleteButton.animateVisibility(selected.isNotEmpty())
+        val deleteBox = requireView().findViewById<MaterialCardView>(R.id.deleteBox)
+        val selectionCounterText = requireView().findViewById<TextView>(R.id.textView37)
+        deleteBox.animateVisibility(selected.isNotEmpty())
+        selectionCounterText.text = "${selected.size} selected"
+
 
         deleteButton.setOnClickListener {
             deleteAlert(requireContext(),"Delete Album?","Are you sure you want to delete this album? This action cannot be undone."){

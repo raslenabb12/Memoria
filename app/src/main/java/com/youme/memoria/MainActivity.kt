@@ -75,7 +75,6 @@ class MainActivity : AppCompatActivity() {
     private fun replaceFrag(frag: Fragment){
         supportFragmentManager.commit {
             replace(R.id.fragmentContainerView,frag)
-            addToBackStack(null)
         }
     }
 

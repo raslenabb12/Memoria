@@ -38,7 +38,7 @@
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:scaleType="centerCrop"
-                    tools:srcCompat="@tools:sample/avatars" />
+                    tools:srcCompat="@tools:sample/avatars[5]" />
 
                 <com.google.android.material.divider.MaterialDivider
                     android:id="@+id/materialDivider3"

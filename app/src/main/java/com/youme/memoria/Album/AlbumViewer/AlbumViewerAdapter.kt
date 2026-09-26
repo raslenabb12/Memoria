@@ -1,27 +1,23 @@
-package com.youme.memoria.Album
+package com.youme.memoria.Album.AlbumViewer
 
-import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.google.android.material.card.MaterialCardView
-import com.youme.inkdex.roomCach.AlbumEntity
 import com.youme.inkdex.roomCach.AlbumPhotoEntity
-import com.youme.inkdex.roomCach.AlbumsList
 import com.youme.memoria.R
 import kotlin.collections.mutableListOf
 
-class AlbumPhotoViewerAdapter(
+class AlbumViewerAdapter(
     private var items: List<AlbumPhotoEntity>,
     private var onItemSelected : (selected: MutableList<String>,photos:List<AlbumPhotoEntity>) -> Unit,
-    private var onItemClick : (uri: String) -> Unit,
-) : RecyclerView.Adapter<AlbumPhotoViewerAdapter.MyViewHolder>() {
+    private var onItemClick : (position: Int) -> Unit,
+) : RecyclerView.Adapter<AlbumViewerAdapter.MyViewHolder>() {
 
     val selected =mutableListOf<String>()
 
@@ -33,7 +29,7 @@ class AlbumPhotoViewerAdapter(
     }
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.album_photo_view_item, parent, false)
+            .inflate(R.layout.album_view_item, parent, false)
 
         return MyViewHolder(view)
     }
@@ -66,7 +62,7 @@ class AlbumPhotoViewerAdapter(
                 onItemSelected(selected,items)
                 notifyItemChanged(position)
             }else{
-                onItemClick(photo.uri)
+                onItemClick(position)
             }
 
         }

@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -77,12 +78,12 @@ class FoldersManager : BottomSheetDialogFragment(R.layout.folders_manager_layout
                 }.collectLatest { isDifferent ->
                     saveButton.isVisible = isDifferent
 
-
-
                 }
 
             }
         }
+
+        setupSelectionButtons()
 
 
     }
@@ -101,6 +102,18 @@ class FoldersManager : BottomSheetDialogFragment(R.layout.folders_manager_layout
             }
         }
 
+
+    }
+    private fun setupSelectionButtons(){
+        val selecteAllButton = requireView().findViewById<Button>(R.id.button14)
+        val deselecteAllButton = requireView().findViewById<Button>(R.id.button18)
+
+        selecteAllButton.setOnClickListener {
+            Adapter.setAllSelected()
+        }
+        deselecteAllButton.setOnClickListener {
+            Adapter.setAllDeselected()
+        }
 
     }
 }
