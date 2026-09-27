@@ -30,7 +30,7 @@ class AlbumFragment : Fragment(R.layout.album_layout) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        Adapter = AlbumAdapter(emptyList(), onItemClick = {albumId ,title->
+        Adapter = AlbumAdapter(emptyList(), onItemClick = {albumId ,title,size->
             AlbumPhotoViewer(albumId, title).show(parentFragmentManager,"")
         }, onItemSelected = {selected ->
             setupSelectionUI(selected)

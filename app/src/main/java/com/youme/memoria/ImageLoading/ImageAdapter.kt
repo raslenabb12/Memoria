@@ -12,14 +12,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.youme.memoria.R
-import kotlinx.parcelize.Parcelize
-@Parcelize
 data class ImageUriItem(
     val id: Long,
     val uri: Uri,
     val width: Int,
     val height: Int
-) : Parcelable {
+)  {
     val ratio: Float get() = if (width > 0) height.toFloat() / width.toFloat() else 1f
 }
 class ImageDiffCallback : DiffUtil.ItemCallback<ImageUriItem>() {

@@ -17,7 +17,7 @@ import com.youme.memoria.R
 
 class AlbumAdapter(
     private var items: List<AlbumsList>,
-    private var onItemClick : (albumId: String,title:String) -> Unit,
+    private var onItemClick : (albumId: String,title:String,size:Int) -> Unit,
     private var onItemSelected : (selected: List<String>) -> Unit
 ) : RecyclerView.Adapter<AlbumAdapter.MyViewHolder>() {
 
@@ -63,7 +63,7 @@ class AlbumAdapter(
                 notifyItemChanged(position)
 
             }else{
-                onItemClick(albumlist.albumId,albumlist.name)
+                onItemClick(albumlist.albumId,albumlist.name,albumlist.size)
             }
 
         }
