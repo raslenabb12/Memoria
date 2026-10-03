@@ -10,6 +10,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -182,10 +183,12 @@ class searchActivity : AppCompatActivity() {
         lifecycleScope.launch {
             progressbar.isVisible=false
                 searchViewModuel.results.collectLatest { state ->
+                    progressbar.isVisible = state is SearchState.Loading
                     when (state) {
-                        is SearchState.Loading -> progressbar.isVisible = true
+                        is SearchState.Loading -> {}
                         is SearchState.Success -> {
                             progressbar.isVisible = false
+
 
                             if (state.results.isEmpty()){
                                 Toast.makeText(this@searchActivity,"No results found", Toast.LENGTH_SHORT).show()
@@ -200,11 +203,13 @@ class searchActivity : AppCompatActivity() {
                             } catch (e: Exception) {
                                 ""
                             }
+
                             Adapter.submitData(lifecycle,PagingData.from(mappedList))
 
                         }
                         is SearchState.Error -> {
                             progressbar.isVisible = false
+                            Log.d("searcherror", "setupSearch: ${state.message}")
                         }
                     }
                 }

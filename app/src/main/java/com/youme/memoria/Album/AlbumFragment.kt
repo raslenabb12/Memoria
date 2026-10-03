@@ -5,9 +5,12 @@ import android.os.Bundle
 import android.view.View
 import android.view.textclassifier.SelectionEvent
 import android.widget.TextView
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
@@ -66,11 +69,16 @@ class AlbumFragment : Fragment(R.layout.album_layout) {
         }
     }
     private fun setupUIDate(){
-        lifecycleScope.launch {
-            viewModuel.albums.collectLatest {data->
-                Adapter.submitData(data)
+        val emptyState = requireView().findViewById<View>(R.id.emptyState)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
+                viewModuel.albums.collectLatest {data->
+                    emptyState.isVisible=data.isEmpty()
+                    Adapter.submitData(data)
 
+                }
             }
+
         }
 
     }

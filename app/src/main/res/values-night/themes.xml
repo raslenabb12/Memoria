@@ -107,6 +107,14 @@
     </style>
 
 
+    <style name="customText" parent="TextAppearance.Material3.LabelLarge">
+        <item name="fontFamily">@font/hanken_grotesk</item>
+        <item name="android:fontFamily">@font/hanken_grotesk</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:letterSpacing">0.02</item>
+    </style>
+
+
 
     <style name="ShapeAppearance.Memoria.Pill" parent="ShapeAppearance.Material3.Corner.Full">
         <item name="cornerSize">50%</item>

@@ -1,8 +1,10 @@
 package com.youme.memoria.Album
 
 import android.app.Application
+import android.net.Uri
 import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
 import com.youme.inkdex.roomCach.AlbumPhotoEntity
 import com.youme.inkdex.roomCach.AlbumsList
@@ -28,6 +30,8 @@ class AlbumViewModel(application: Application): AndroidViewModel(application){
 
     private val dao = PhotosDatabase.getInstance(application).AlbumDao()
     private val photoDao = PhotosDatabase.getInstance(application).photoDao()
+
+    val refrenceImages = MutableStateFlow<List<Uri>>(emptyList())
 
     val albums = dao.getAlbumsWithPhotos()
         .map { list -> list.map { AlbumsList(it.album.id,it.album.name, it.photos.take(4).map { p -> p.uri.toUri() }, size = it.photos.size) } }
@@ -69,9 +73,7 @@ class AlbumViewModel(application: Application): AndroidViewModel(application){
             dao.getAllAlbums().filter { it.autoUpdate }.forEach { album->
                     if (album.centroidEmbedding.isNotEmpty()){
                         viewModelScope.launch {
-                            val photosList = photoRepo.searchByEmbd(album.centroidEmbedding.toFloatArray(),photoDao.getAll(),0.80f)
-                            albumRepo.addPhotosToAlbum(photosList.map { AlbumPhotoEntity(album.id,it.first.uri) })
-                            dao.updateCentroidEmbedding(album.id,albumRepo.computeCentroid(photosList.map { it.first.embedding.toFloatArray() }).toByteArray())
+                            updateEmbeddingsByCentroidEmbedding(album.centroidEmbedding,album.id)
                         }
                     }
                     else{
@@ -89,7 +91,13 @@ class AlbumViewModel(application: Application): AndroidViewModel(application){
             dao.updateCentroidEmbedding(albumId,albumRepo.computeCentroid(photosList.map { it.first.embedding.toFloatArray() }).toByteArray())
         }
     }
-
+    private fun updateEmbeddingsByCentroidEmbedding(embedding: ByteArray, albumId: String){
+        viewModelScope.launch {
+            val photosList = photoRepo.searchByEmbd(embedding.toFloatArray(),photoDao.getAll(),0.80f)
+            albumRepo.addPhotosToAlbum(photosList.map { AlbumPhotoEntity(albumId,it.first.uri) })
+            dao.updateCentroidEmbedding(albumId,albumRepo.computeCentroid(photosList.map { it.first.embedding.toFloatArray() }).toByteArray())
+        }
+    }
     fun deleteAlbum(albumIds: List<String>, Adapter: AlbumAdapter){
         viewModelScope.launch {
             dao.deleteAlbum(albumIds)
@@ -102,9 +110,15 @@ class AlbumViewModel(application: Application): AndroidViewModel(application){
         viewModelScope.launch {
             val albumId = UUID.randomUUID().toString()
             albumRepo.addAlbum(albumId,title,autoUpdate)
-            if (startMode==0){
-                viewModelScope.launch {
-                    updateEmbeddingsByNameSearch(title,albumId)
+            when (startMode){
+                0->{ viewModelScope.launch { updateEmbeddingsByNameSearch(title,albumId) }}
+                1->{
+                    viewModelScope.launch {
+                        photoRepo.initializeImageModel()
+                        val centroidEmbedding = albumRepo.computeCentroid(refrenceImages.value.map { photoRepo.encodeImage(application,it) })
+                        updateEmbeddingsByCentroidEmbedding(centroidEmbedding.toByteArray(),albumId)
+                        refrenceImages.value=emptyList()
+                    }
                 }
             }
         }
@@ -114,6 +128,13 @@ class AlbumViewModel(application: Application): AndroidViewModel(application){
             photoRepo.unloadModel()
         }
         super.onCleared()
+    }
+
+    fun addReferncePhoto(image: Uri){
+        refrenceImages.value = refrenceImages.value.toMutableList().apply { add(image) }.distinct()
+    }
+    fun removeReferncePhotos(images: List<Uri>){
+        refrenceImages.value = refrenceImages.value.toMutableList().apply { removeAll(images) }
     }
 
 }

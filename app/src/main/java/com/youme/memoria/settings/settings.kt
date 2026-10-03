@@ -24,19 +24,19 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlin.getValue
 import androidx.core.net.toUri
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.youme.memoria.settings.FoldersManager.FoldersManager
 
-class settings : Fragment(R.layout.settings_layout) {
-    private lateinit var repo: PhotoRepository
+class SettingsFragment : Fragment(R.layout.settings_layout) {
     private val indexingViewModel: IndexingViewModel by activityViewModels {
-        IndexingViewModelFactory(repo, requireContext().applicationContext)
+        IndexingViewModelFactory(PhotoRepository(requireContext()), requireContext().applicationContext)
     }
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        repo= PhotoRepository(requireContext())
         setupIndexingUi()
         setupUI()
         setUpAppVersion()
@@ -48,42 +48,51 @@ class settings : Fragment(R.layout.settings_layout) {
         val batteryStatusChip = requireView().findViewById<Chip>(R.id.chip)
         val alertText = requireView().findViewById<TextView>(R.id.textView4)
         indexingViewModel.getFormattedDatabaseSize("photo_db")
-        lifecycleScope.launch {
-            indexingViewModel.dbSize.collectLatest {
-                dBSizeText.text =it
-            }
-        }
-        lifecycleScope.launch {
-            indexingViewModel.batteryTemp.collectLatest {temp->
-                batteryStatusChip.apply {
-                    text =  "$temp°C"
 
-                      when{
-                        temp<35f->{
-                            chipIconTint= ColorStateList.valueOf(Color.GREEN)
-                            alertText.isVisible = false
-                        }
 
-                        temp<42f->{
-                            val color=ColorStateList.valueOf("#FFA500".toColorInt())
-                            chipIconTint = color
-                            alertText.apply {
-                                text = "Running a bit slower to keep your phone cool"
-                                isVisible=true
-                                setTextColor(color)
-                            }
-                        }
-
-                        else->{
-                            val color = ColorStateList.valueOf(Color.RED)
-                            chipIconTint = color
-                            alertText.apply {
-                                text = "Paused — your device is warm. Indexing will resume once it cools down."
-                                isVisible=true
-                                setTextColor(color)
-                            }
-                        }
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    indexingViewModel.dbSize.collectLatest {
+                        dBSizeText.text =it
                     }
+                }
+
+                launch {
+                    indexingViewModel.batteryTemp.collectLatest { temp ->
+                        batteryStatusChip.apply {
+                            text = "$temp°C"
+
+                            when {
+                                temp < 35f -> {
+                                    chipIconTint = ColorStateList.valueOf(Color.GREEN)
+                                    alertText.isVisible = false
+                                }
+
+                                temp < 42f -> {
+                                    val color = ColorStateList.valueOf("#FFA500".toColorInt())
+                                    chipIconTint = color
+                                    alertText.apply {
+                                        text = "Running a bit slower to keep your phone cool"
+                                        isVisible = true
+                                        setTextColor(color)
+                                    }
+                                }
+
+                                else -> {
+                                    val color = ColorStateList.valueOf(Color.RED)
+                                    chipIconTint = color
+                                    alertText.apply {
+                                        text =
+                                            "Paused — your device is warm. Indexing will resume once it cools down."
+                                        isVisible = true
+                                        setTextColor(color)
+                                    }
+                                }
+                            }
+                        }
+                }
+
                 }
             }
         }
@@ -115,66 +124,72 @@ class settings : Fragment(R.layout.settings_layout) {
 
         val pauseBt = requireView().findViewById<MaterialButton>(R.id.button3)
         val resumeBt = requireView().findViewById<MaterialButton>(R.id.button4)
-        lifecycleScope.launch {
-            indexingViewModel.state.collectLatest {state ->
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                indexingViewModel.state.collectLatest { state ->
+                    try {
+                        when (state) {
+                            is IndexingViewModel.IndexingState.Ready -> {
+                                statusLog.text = "Status: Ready"
+                                progressLog.text = "${state.processed}/${state.total}"
+                                progressBar.max = state.total
+                                progressBar.progress = state.processed
 
-                try {
-                    when(state){
-                        is IndexingViewModel.IndexingState.Ready ->{
-                            statusLog.text="Status: Ready"
-                            progressLog.text="${state.processed}/${state.total}"
-                            progressBar.max=state.total
-                            progressBar.progress=state.processed
+                                etaLog.text = "${(state.processed * 100) / state.total}%"
 
-                            etaLog.text ="${(state.processed*100)/state.total}%"
+                                resumeBt.apply {
+                                    isEnabled = true
+                                    setOnClickListener {
+                                        progressLog.text = "Loading.."
+                                        indexingViewModel.startIndexing()
+                                    }
+                                }
+                                pauseBt.isEnabled = false
+                            }
 
-                            resumeBt.apply {
-                                isEnabled=true
-                                setOnClickListener {
-                                    progressLog.text="Loading.."
-                                    indexingViewModel.startIndexing()
+                            is IndexingViewModel.IndexingState.Running -> {
+                                statusLog.text = "Status: Running"
+                                progressLog.text = "${state.processed}/${state.total}"
+                                progressBar.max = state.total
+                                progressBar.progress = state.processed
+                                val old = " ETA: ${"%.1f".format(state.etaMinutes)}Min"
+
+                                etaLog.apply {
+                                    isVisible = true
+                                    text = "${(state.processed * 100) / state.total}%  ETA: ${
+                                        formatEta(state.etaMinutes.toLong())
+                                    }"
+                                }
+
+                                pauseBt.apply {
+                                    isEnabled = true
+                                    setOnClickListener {
+                                        indexingViewModel.pause()
+                                    }
+                                }
+                                resumeBt.isEnabled = false
+                            }
+
+                            is IndexingViewModel.IndexingState.Idle -> {
+                                statusLog.text = "Status: Idle"
+                            }
+
+                            is IndexingViewModel.IndexingState.Completed -> {
+                                pauseBt.isEnabled = false
+                                resumeBt.isEnabled = false
+                                etaLog.isVisible = false
+                                statusLog.text = "Status: Completed"
+                                progressLog.text = "${state.total}/${state.total}"
+
+                                progressBar.apply {
+                                    max = state.total
+                                    progress = state.total
                                 }
                             }
-                            pauseBt.isEnabled=false
                         }
-                        is IndexingViewModel.IndexingState.Running->{
-                            statusLog.text="Status: Running"
-                            progressLog.text="${state.processed}/${state.total}"
-                            progressBar.max=state.total
-                            progressBar.progress=state.processed
-                            val old= " ETA: ${"%.1f".format(state.etaMinutes)}Min"
-
-                            etaLog.apply {
-                                isVisible=true
-                                text = "${(state.processed*100)/state.total}%  ETA: ${formatEta(state.etaMinutes.toLong())}"
-                            }
-
-                            pauseBt.apply {
-                                isEnabled=true
-                                setOnClickListener {
-                                    indexingViewModel.pause()
-                                }
-                            }
-                            resumeBt.isEnabled=false
-                        }
-                        is IndexingViewModel.IndexingState.Idle->{
-                            statusLog.text = "Status: Idle"
-                        }
-                        is IndexingViewModel.IndexingState.Completed ->{
-                            pauseBt.isEnabled=false
-                            resumeBt.isEnabled=false
-                            etaLog.isVisible=false
-                            statusLog.text="Status: Completed"
-                            progressLog.text="${state.total}/${state.total}"
-
-                            progressBar.apply {
-                                max = state.total
-                                progress = state.total
-                            }
-                        }
+                    } catch (e: Exception) {
+                        // no done yet
                     }
-                } catch (e: Exception) {
-                   // no done yet
                 }
             }
         }
@@ -190,21 +205,21 @@ class settings : Fragment(R.layout.settings_layout) {
         }
 
 
-        lifecycleScope.launch {
-            indexingViewModel.folders.collectLatest { folders->
-
-                foldersTitle.text = "Manage Folders (${folders.size})"
-
-            }
-        }
-
         viewLifecycleOwner.lifecycleScope.launch {
-            indexingViewModel.folderPrefs.selectedBuckets.collectLatest { selectedFolders->
-                indexingViewModel.pause()
-                indexingViewModel.scanGallery()
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    indexingViewModel.folders.collectLatest { folders->
+                        foldersTitle.text = "Manage Folders (${folders.size})"
+                    }
+                }
+                launch {
+                    indexingViewModel.folderPrefs.selectedBuckets.collectLatest { selectedFolders->
+                        indexingViewModel.scanGallery()
 
-                view?.let {
-                    it.findViewById<TextView>(R.id.textView33).text = "${selectedFolders.size} selected"
+                        view?.let {
+                            it.findViewById<TextView>(R.id.textView33).text = "${selectedFolders.size} selected"
+                        }
+                    }
                 }
             }
         }

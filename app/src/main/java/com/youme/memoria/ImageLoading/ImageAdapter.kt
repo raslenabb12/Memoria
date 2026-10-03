@@ -44,6 +44,7 @@ class ImagePagingAdapter(val onImageClick :(ImageView,Int) -> Unit) : PagingData
 
         Glide.with(holder.itemView.context)
             .load(item.uri)
+            .error(R.drawable.baseline_broken_image_24)
             .transition(DrawableTransitionOptions.withCrossFade())
             .into(holder.imageView)
 

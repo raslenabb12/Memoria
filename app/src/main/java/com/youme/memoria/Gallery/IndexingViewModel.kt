@@ -40,6 +40,7 @@ import kotlin.coroutines.cancellation.CancellationException
 data class FolderInfo(
     val bucketId: String,
     val bucketName: String,
+    val folderPath : String,
     val itemCount: Int
 )
 class IndexingViewModelFactory(
@@ -332,7 +333,8 @@ class IndexingViewModel(
 
         val projection = arrayOf(
             MediaStore.Images.Media.BUCKET_ID,
-            MediaStore.Images.Media.BUCKET_DISPLAY_NAME
+            MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
+            MediaStore.Images.Media.RELATIVE_PATH
         )
 
         appContext.contentResolver.query(
@@ -344,15 +346,19 @@ class IndexingViewModel(
         )?.use { cursor ->
             val idCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_ID)
             val nameCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME)
+            val pathId = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.RELATIVE_PATH)
+
 
             while (cursor.moveToNext()) {
                 val bucketId = cursor.getString(idCol) ?: continue
                 val bucketName = cursor.getString(nameCol) ?: "Unknown"
+                val path  = cursor.getString(pathId)?:"Unknown"
 
                 val existing = folders[bucketId]
                 folders[bucketId] = FolderInfo(
                     bucketId,
                     bucketName,
+                    path,
                     (existing?.itemCount ?: 0) + 1
                 )
             }

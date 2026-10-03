@@ -16,7 +16,6 @@
         <com.google.android.material.appbar.MaterialToolbar
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:navigationIcon="@drawable/outline_settings_24"
             app:title="Settings"
             app:titleCentered="true"
             app:titleTextColor="@android:color/white" />
@@ -195,16 +194,18 @@
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:spacing="8dp"
-                            app:innerCornerSize="5dp">
+                            app:innerCornerSize="10dp">
 
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/button3"
                                 android:layout_width="wrap_content"
                                 android:layout_height="match_parent"
                                 android:layout_weight="1"
+                                android:fontFamily="@font/hanken_grotesk"
                                 android:text="Pause"
                                 android:textColor="@android:color/white"
                                 app:backgroundTint="@color/button"
+                                app:cornerRadius="22dp"
                                 app:icon="@drawable/baseline_pause_24"
                                 app:iconGravity="textStart"
                                 app:iconTint="@android:color/white" />
@@ -214,6 +215,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="match_parent"
                                 android:layout_weight="1"
+                                android:fontFamily="@font/hanken_grotesk"
                                 android:text="Resume"
                                 android:textColor="@android:color/white"
                                 app:backgroundTint="@color/button"
@@ -404,7 +406,7 @@
                             android:layout_gravity="center"
                             android:layout_marginStart="10dp"
                             android:layout_weight="1"
-                            android:fontFamily="@font/jetbrains_mono"
+                            android:fontFamily="@font/hanken_grotesk"
                             android:text="Version"
                             android:textColor="@color/primary_90"
                             android:textSize="16sp" />

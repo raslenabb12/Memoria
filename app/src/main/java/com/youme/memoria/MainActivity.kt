@@ -20,7 +20,7 @@ import com.youme.memoria.Album.AlbumFragment
 import com.youme.memoria.Gallery.GalleryFragement
 import com.youme.memoria.onboarding.OnboardingPrefs
 import com.youme.memoria.onboarding.SetupScreen
-import com.youme.memoria.settings.settings
+import com.youme.memoria.settings.SettingsFragment
 import kotlinx.coroutines.launch
 
 
@@ -39,6 +39,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
 
 
 
@@ -63,7 +64,7 @@ class MainActivity : AppCompatActivity() {
                     replaceFrag(GalleryFragement())
                 }
                 R.id.settings->{
-                    replaceFrag(settings())
+                    replaceFrag(SettingsFragment())
                 }
                 R.id.album->{
                     replaceFrag(AlbumFragment())

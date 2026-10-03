@@ -19,7 +19,7 @@
             android:id="@+id/app_bar_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fitsSystemWindows="true"
+            android:fitsSystemWindows="false"
             app:materialThemeOverlay="@style/ThemeOverlay.Material3Expressive.AppBarWithSearch"
             app:statusBarForeground="?attr/colorSurface">
 
@@ -35,11 +35,13 @@
                     android:id="@+id/search_bar"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center"
                     android:hint="Search"
                     android:minHeight="45dp"
                     app:maxButtonHeight="45dp"
                     app:navigationIcon="@drawable/baseline_search_24"></com.google.android.material.search.SearchBar>
             </com.google.android.material.appbar.MaterialToolbar>
+
         </com.google.android.material.appbar.AppBarLayout>
     </LinearLayout>
 

@@ -20,7 +20,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.google.android.material.appbar.MaterialToolbar
@@ -83,12 +85,11 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
             observer
         )
 
-        lifecycleScope.launch {
-            loadGallery()
-            indexingState()
+        loadGallery()
+        indexingState()
 
 
-        }
+
         navigateToSearch()
 
 
@@ -96,10 +97,15 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
     }
     private fun loadGallery() {
         val viewModel = GalleryViewModel(GalleryRepository(requireContext().contentResolver))
-        lifecycleScope.launch {
-            viewModel.galleryFlow.collectLatest { pagingData ->
-                Adapter.submitData(pagingData)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
+                viewModel.galleryFlow.collectLatest { pagingData ->
+                    Adapter.submitData(pagingData)
+                }
+
+
             }
+
         }
     }
 
@@ -130,83 +136,86 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
 
 
 
-        lifecycleScope.launch {
-            indexingViewModel.state.collectLatest {state->
-                when(state){
-                    is IndexingViewModel.IndexingState.Ready -> {
-                        processButton.setIconResource(R.drawable.baseline_play_arrow_24)
-                        logText.text = "Indexed : ${state.processed}/${state.total}"
-
-                        smallIndicatorText.text = "Paused"
-
-                        progressbar.apply {
-                            isIndeterminate=false
-                            max = state.total
-                            progress  =state.processed
-                        }
-                        smallIndicatorProgress.apply {
-                            max = state.total
-                            progress  =state.processed
-                        }
-
-                        processButton.isVisible=true
-                        processButton.setOnClickListener {
-                            indexingViewModel.startIndexing()
-                            logText.text="Loading"
-                            progressbar.isIndeterminate=true
-                        }
-
-                    }
-                    is IndexingViewModel.IndexingState.Running ->{
-                        logText.text = "Indexing: ${state.processed}/${state.total}"
-                        smallIndicatorText.text = "${state.processed}/${state.total}"
-
-                        processButton.setIconResource(R.drawable.baseline_pause_24)
-                        processButton.isVisible=true
-                        processButton.setOnClickListener {
-                            indexingViewModel.pause()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED){
+                indexingViewModel.state.collectLatest {state->
+                    when(state){
+                        is IndexingViewModel.IndexingState.Ready -> {
+                            processButton.setIconResource(R.drawable.baseline_play_arrow_24)
                             logText.text = "Indexed : ${state.processed}/${state.total}"
-                        }
 
-                        progressbar.isVisible=true
-                        progressbar.isIndeterminate=false
+                            smallIndicatorText.text = "Paused"
+
+                            progressbar.apply {
+                                isIndeterminate=false
+                                max = state.total
+                                progress  =state.processed
+                            }
+                            smallIndicatorProgress.apply {
+                                max = state.total
+                                progress  =state.processed
+                            }
+
+                            processButton.isVisible=true
+                            processButton.setOnClickListener {
+                                indexingViewModel.startIndexing()
+                                logText.text="Loading"
+                                progressbar.isIndeterminate=true
+                            }
+
+                        }
+                        is IndexingViewModel.IndexingState.Running ->{
+                            logText.text = "Indexing: ${state.processed}/${state.total}"
+                            smallIndicatorText.text = "${state.processed}/${state.total}"
+
+                            processButton.setIconResource(R.drawable.baseline_pause_24)
+                            processButton.isVisible=true
+                            processButton.setOnClickListener {
+                                indexingViewModel.pause()
+                                logText.text = "Indexed : ${state.processed}/${state.total}"
+                            }
+
+                            progressbar.isVisible=true
+                            progressbar.isIndeterminate=false
 
 
-                        progressbar.apply {
-                            max =  state.total
-                            progress = state.processed
+                            progressbar.apply {
+                                max =  state.total
+                                progress = state.processed
+                            }
+                            smallIndicatorProgress.apply {
+                                max = state.total
+                                progress  =state.processed
+                            }
                         }
-                        smallIndicatorProgress.apply {
-                            max = state.total
-                            progress  =state.processed
+                        is IndexingViewModel.IndexingState.Completed ->{
+                            processButton.isVisible=false
+                            logText.text = "Indexing completed: ${state.total}"
+                            progressbar.isIndeterminate=false
+
+
+                            progressbar.apply {
+                                max =  state.total
+                                progress = state.total
+                            }
+                            smallIndicatorProgress.apply {
+                                max = state.total
+                                progress  =state.total
+                            }
+
+
+                            smallIndicatorText.text = "Completed"
+
+
+                            //close large indicator
+                            animateIndicator(largeIndicatorBox,smallIndicatorBox)
+                            toolbar.title=""
                         }
+                        else -> {}
                     }
-                    is IndexingViewModel.IndexingState.Completed ->{
-                        processButton.isVisible=false
-                        logText.text = "Indexing completed: ${state.total}"
-                        progressbar.isIndeterminate=false
-
-
-                        progressbar.apply {
-                            max =  state.total
-                            progress = state.total
-                        }
-                        smallIndicatorProgress.apply {
-                            max = state.total
-                            progress  =state.total
-                        }
-
-
-                        smallIndicatorText.text = "Completed"
-
-
-                        //close large indicator
-                        animateIndicator(largeIndicatorBox,smallIndicatorBox)
-                        toolbar.title=""
-                    }
-                    else -> {}
                 }
             }
+
         }
 
 

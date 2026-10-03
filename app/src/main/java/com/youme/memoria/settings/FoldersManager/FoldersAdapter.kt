@@ -26,6 +26,7 @@ class FoldersAdapter(
     class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val title: TextView = itemView.findViewById(R.id.textView26)
         val photosCount: TextView = itemView.findViewById(R.id.textView27)
+        val folderPath: TextView = itemView.findViewById(R.id.textView24)
         val checkBox : MaterialCheckBox = itemView.findViewById<MaterialCheckBox>(R.id.checkBox)
         val box: MaterialCardView = itemView.findViewById(R.id.box)
 
@@ -44,9 +45,12 @@ class FoldersAdapter(
         val folder = items[position]
         val currentSelection = _selectedFolders.value.toMutableSet()
 
+        holder.folderPath.text=folder.folderPath
         holder.title.text= folder.bucketName
         holder.photosCount.text = "${folder.itemCount} photo"
         holder.checkBox.isChecked = currentSelection.contains(folder.bucketId)
+
+        holder.box.strokeWidth = if (currentSelection.contains(folder.bucketId)) 6 else 0
 
         holder.box.setOnClickListener {
             holder.checkBox.isChecked = !holder.checkBox.isChecked
@@ -54,6 +58,7 @@ class FoldersAdapter(
             _selectedFolders.update { currentSet ->
                 if (holder.checkBox.isChecked) currentSet +folder.bucketId else currentSet - folder.bucketId
             }
+            notifyItemChanged(position)
         }
     }
     fun setAllSelected(){

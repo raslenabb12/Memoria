@@ -33,7 +33,6 @@ class MemoriaEncoder(private val context: Context) {
         const val IMAGE_SIZE = 256
         const val EMBED_DIM = 512
         const val CONTEXT_LENGTH = 77
-        const val VOCAB_SIZE = 49408
     }
 
     fun initializeImageEncoder(){
@@ -54,12 +53,26 @@ class MemoriaEncoder(private val context: Context) {
     fun initializeTextEncoder() {
         val options = Interpreter.Options().apply {
             numThreads = 4
+            useXNNPACK=true
         }
 
-        textInterpreter = Interpreter(loadModel("mobileclip_text_reimpl_v2.tflite"), options)
+        textInterpreter = Interpreter(loadModel("mobileclip_s0_text_int8.tflite"), options)
 
-        loadEmbeddingTable()
         CLIPTokenizer.init(context)
+    }
+
+    private val tokenBuffer: ByteBuffer by lazy {
+        ByteBuffer.allocateDirect(CONTEXT_LENGTH * 4).order(ByteOrder.nativeOrder())
+    }
+    suspend fun encodeText(query: String): FloatArray = modelMutex.withLock {
+        val tokens = CLIPTokenizer.tokenize(query)
+        tokenBuffer.clear()
+        for (i in 0 until CONTEXT_LENGTH) tokenBuffer.putInt(tokens[i].toInt())
+        tokenBuffer.rewind()
+
+        val out = Array(1) { FloatArray(EMBED_DIM) }
+        textInterpreter.run(tokenBuffer, out)
+        l2Normalize(out[0])
     }
     private val imageInputBuffer: ByteBuffer by lazy {
         ByteBuffer.allocateDirect(1 * 3 * IMAGE_SIZE * IMAGE_SIZE * 4).order(ByteOrder.nativeOrder())
@@ -102,52 +115,6 @@ class MemoriaEncoder(private val context: Context) {
     }
     private val textInputBuffer: ByteBuffer by lazy {
         ByteBuffer.allocateDirect(1 * CONTEXT_LENGTH * EMBED_DIM * 4).order(ByteOrder.nativeOrder())
-    }
-    fun encodeText(query: String): FloatArray {
-        val tokens = CLIPTokenizer.tokenize(query)
-
-
-        var eosPos = tokens.indexOf(49407)
-
-
-        if (eosPos == -1) eosPos = tokens.indexOf(0)
-        if (eosPos == -1) eosPos = 76
-
-        textInputBuffer.clear()
-
-        for (i in 0 until CONTEXT_LENGTH) {
-            val tokenId = tokens[i].toInt().coerceIn(0, VOCAB_SIZE - 1)
-            val embed = getEmbedding(tokenId)
-            for (value in embed) {
-                textInputBuffer.putFloat(value)
-            }
-        }
-        textInputBuffer.rewind()
-
-
-        val eosInput = intArrayOf(eosPos)
-
-
-        val textOutput = Array(1) { FloatArray(EMBED_DIM) }
-
-
-        val embedIdx = textInterpreter.getInputIndex("serving_default_token_embeds:0")
-        val eosIdx = textInterpreter.getInputIndex("serving_default_eos_positions:0")
-
-        val inputs = arrayOfNulls<Any>(2)
-        inputs[embedIdx] = textInputBuffer
-        inputs[eosIdx] = eosInput
-
-        val outputs = mutableMapOf<Int, Any>()
-        outputs[0] = textOutput
-
-        try {
-            textInterpreter.runForMultipleInputsOutputs(inputs, outputs)
-        } catch (e: Exception) {
-            Log.e("MemoriaEncoder", "Text inference failed: ${e.message}", e)
-        }
-        val result  = l2Normalize(textOutput[0])
-        return result
     }
 
     fun cosineSimilarity(a: FloatArray, b: FloatArray): Float {
@@ -204,25 +171,6 @@ class MemoriaEncoder(private val context: Context) {
         }
 
         return croppedBitmap
-    }
-    private fun loadEmbeddingTable(){
-        val afd = context.assets.openFd("token_embeddings_f32.bin")
-        val mapped = afd.createInputStream().channel.map(
-            FileChannel.MapMode.READ_ONLY,
-            afd.startOffset,
-            afd.declaredLength
-        ) as MappedByteBuffer
-        mapped.order(ByteOrder.LITTLE_ENDIAN)
-        embeddingBuffer = mapped
-    }
-
-    private fun getEmbedding(tokenId: Int): FloatArray {
-        val embed = FloatArray(EMBED_DIM)
-        val byteOffset = tokenId * EMBED_DIM * 4
-        for (j in 0 until EMBED_DIM) {
-            embed[j] = embeddingBuffer.getFloat(byteOffset + j * 4)
-        }
-        return embed
     }
 
     fun freeImageEncoder() {

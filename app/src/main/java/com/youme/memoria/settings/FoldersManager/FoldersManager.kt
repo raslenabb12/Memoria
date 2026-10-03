@@ -53,14 +53,9 @@ class FoldersManager : BottomSheetDialogFragment(R.layout.folders_manager_layout
         Adapter= FoldersAdapter(emptyList())
         setupRecyclerView()
 
-        lifecycleScope.launch {
-            folderPref.selectedBuckets.collectLatest {selectedBuckets->
-                Adapter.setSelected(selectedBuckets)
-
-            }
-        }
         saveButton.setOnClickListener {
             lifecycleScope.launch {
+                indexingViewModel.pause()
                 folderPref.setSelectedBuckets(Adapter.selectedFoldersFlow.value)
                 dismiss()
             }
@@ -70,14 +65,22 @@ class FoldersManager : BottomSheetDialogFragment(R.layout.folders_manager_layout
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                combine(
-                    folderPref.selectedBuckets,
-                    Adapter.selectedFoldersFlow
-                ) { savedInDatastore, currentInAdapter ->
-                    savedInDatastore != currentInAdapter
-                }.collectLatest { isDifferent ->
-                    saveButton.isVisible = isDifferent
 
+                launch {
+                    folderPref.selectedBuckets.collectLatest {selectedBuckets->
+                        Adapter.setSelected(selectedBuckets)
+                    }
+                }
+                launch {
+                    combine(
+                        folderPref.selectedBuckets,
+                        Adapter.selectedFoldersFlow
+                    ) { savedInDatastore, currentInAdapter ->
+                        savedInDatastore != currentInAdapter
+                    }.collectLatest { isDifferent ->
+                        saveButton.isVisible = isDifferent
+
+                    }
                 }
 
             }
@@ -95,11 +98,14 @@ class FoldersManager : BottomSheetDialogFragment(R.layout.folders_manager_layout
                 LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
             adapter=Adapter
         }
-        lifecycleScope.launch {
-            indexingViewModel.folders.collectLatest {folders->
-                Adapter.submitData(folders)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                indexingViewModel.folders.collectLatest {folders->
+                    Adapter.submitData(folders)
 
+                }
             }
+
         }
 
 

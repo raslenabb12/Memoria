@@ -78,14 +78,17 @@
     <Button
         android:id="@+id/button17"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="55dp"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
         android:fontFamily="@font/hanken_grotesk"
         android:text="Save"
+        android:textStyle="bold"
         android:visibility="gone"
         app:cornerRadius="10dp"
+        app:icon="@drawable/baseline_check_24"
+        app:iconGravity="textStart"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
