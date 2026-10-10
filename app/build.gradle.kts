@@ -12,8 +12,8 @@ android {
         applicationId = "com.youme.memoria"
         minSdk = 28
         targetSdk = 36
-        versionCode = 6
-        versionName = "v1.4.1-Beta"
+        versionCode = 7
+        versionName = "v1.5.0-Beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -75,6 +75,9 @@ dependencies {
     implementation("com.google.android.material:material:1.14.0")
 
     implementation("androidx.datastore:datastore-preferences:1.2.1")
+
+    implementation("com.github.yalantis:ucrop:2.2.11")
+
 
 
 

@@ -24,9 +24,19 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".search.searchActivity" android:exported="false"/>
+        <activity android:name=".search.searchActivity" android:exported="true"
+            android:label="Search Image">
+        >
+
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+        </activity>
         <activity android:name=".imageViewer.imageViewerActivity" android:exported="false"/>
         <activity android:name=".onboarding.SetupScreen" android:exported="false"/>
+        <activity android:name="com.yalantis.ucrop.UCropActivity" android:exported="false"/>
     </application>
 
 </manifest>

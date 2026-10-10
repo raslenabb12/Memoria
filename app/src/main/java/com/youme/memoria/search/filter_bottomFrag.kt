@@ -202,7 +202,7 @@ class FilterBottomFrag(): BottomSheetDialogFragment(R.layout.filter_layout) {
 //    }
     private suspend fun setupFolders(){
 
-        val folders = repo.getFoldersList().map { FolderInfo(it.folderPath,it.folderPath.substringBeforeLast("/").substringAfterLast("/"),"",it.count.toInt()) }
+        val folders = repo.getFoldersList().map { FolderInfo(it.folderPath,it.folderPath.substringBeforeLast("/").substringAfterLast("/"),it.folderPath,it.count.toInt()) }
         Adapter = FoldersAdapter(folders)
 
         Adapter.setSelected(selectedFolders.toSet())

@@ -1,9 +1,13 @@
 package com.youme.memoria.search
 
+import android.app.Activity
 import android.content.Intent
+import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.util.Log
+import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.ImageButton
@@ -29,6 +33,7 @@ import androidx.paging.PagingData
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.chip.Chip
@@ -38,6 +43,7 @@ import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.search.SearchBar
 import com.google.android.material.search.SearchView
 import com.google.android.material.textfield.TextInputEditText
+import com.yalantis.ucrop.UCrop
 import com.youme.memoria.ImageLoading.ImagePagingAdapter
 import com.youme.memoria.ImageLoading.ImageUriItem
 import com.youme.memoria.PhotoRepository
@@ -47,10 +53,24 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 
 class searchActivity : AppCompatActivity() {
     private lateinit var Adapter: ImagePagingAdapter
     private val searchViewModuel : SearchViewModuel by viewModels()
+    private val cropLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            when (result.resultCode) {
+               RESULT_OK -> {
+                    val croppedUri: Uri? = result.data?.let { UCrop.getOutput(it) }
+                   searchViewModuel.setSearchImage(croppedUri)
+                }
+                UCrop.RESULT_ERROR -> {
+                    val error = result.data?.let { UCrop.getError(it) }
+                    error?.printStackTrace()
+                }
+            }
+        }
     private lateinit var repo: PhotoRepository
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -96,6 +116,7 @@ class searchActivity : AppCompatActivity() {
         setupFilterObserver()
         setupImageSearch()
         setupTopBar()
+        handleShareIntent(intent)
 
     }
 
@@ -135,7 +156,11 @@ class searchActivity : AppCompatActivity() {
                     val imageview = imageToolbar.findViewById<ImageView>(R.id.imageView7)
 
 
-                    Glide.with(this@searchActivity).load(image).into(imageview)
+                    Glide.with(this@searchActivity)
+                        .load(image)
+                        .skipMemoryCache(true)
+                        .diskCacheStrategy(DiskCacheStrategy.NONE)
+                        .into(imageview)
 
                     container.addView(imageToolbar)
 
@@ -143,11 +168,29 @@ class searchActivity : AppCompatActivity() {
                         container.removeView(imageToolbar)
                         searchToolBar.isVisible = true
                         searchViewModuel.setSearchImage(null)
+                        //delete cached image
+                        File(cacheDir,"cropped.jpg").delete()
                     }
                 }
             }
 
         }
+    }
+
+    private fun cropImage(image: Uri){
+        val destinUri = Uri.fromFile(
+            File(cacheDir,"cropped.jpg")
+        )
+        val options = UCrop.Options().apply {
+            setCompressionFormat(Bitmap.CompressFormat.JPEG)
+            setFreeStyleCropEnabled(true)
+        }
+
+        val intent = UCrop.of(image,destinUri)
+            .withOptions(options)
+            .useSourceImageAspectRatio()
+            .getIntent(this)
+        cropLauncher.launch(intent)
     }
 
     private fun setupTopBar(){
@@ -157,7 +200,7 @@ class searchActivity : AppCompatActivity() {
             ActivityResultContracts.PickVisualMedia()
         ) { uri ->
             if (uri != null) {
-                searchViewModuel.setSearchImage(uri)
+                cropImage(uri)
             }
         }
 
@@ -165,6 +208,7 @@ class searchActivity : AppCompatActivity() {
             when(item.itemId){
                 R.id.image_search->{ pickedImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))}
                 R.id.filter->{FilterBottomFrag().show(supportFragmentManager,"") }
+                R.id.visual_search->{ VisualConceptBottomFrag().show(supportFragmentManager,"") }
                 else -> false
             }
             true
@@ -190,9 +234,8 @@ class searchActivity : AppCompatActivity() {
                             progressbar.isVisible = false
 
 
-                            if (state.results.isEmpty()){
-                                Toast.makeText(this@searchActivity,"No results found", Toast.LENGTH_SHORT).show()
-                            }
+                            findViewById<View>(R.id.emptyState).isVisible= state.results.isEmpty()
+
 
                             val mappedList = state.results.map { it.first }.map {
                                 ImageUriItem(uri = it.uri.toUri(), height = it.height, width = it.width, id = it.uri.hashCode().toLong())
@@ -206,6 +249,7 @@ class searchActivity : AppCompatActivity() {
 
                             Adapter.submitData(lifecycle,PagingData.from(mappedList))
 
+
                         }
                         is SearchState.Error -> {
                             progressbar.isVisible = false
@@ -218,7 +262,6 @@ class searchActivity : AppCompatActivity() {
             recyclerView.post {
                 recyclerView.scrollToPosition(0)
             }
-
         }
 
 
@@ -230,11 +273,20 @@ class searchActivity : AppCompatActivity() {
                 true
             } else false
         }
+
     }
 
     override fun onDestroy() {
         SearchResultCache.searchResults = null
         super.onDestroy()
+    }
+
+    private fun handleShareIntent(intent: Intent){
+        if (intent.action== Intent.ACTION_SEND &&  intent.type?.startsWith("image/") == true){
+            val imageUri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+            imageUri?.let { cropImage(imageUri) }
+
+        }
     }
     private fun setupPadding(){
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.linearLayout2)) { view, insets ->

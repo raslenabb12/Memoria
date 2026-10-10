@@ -212,6 +212,12 @@ class SettingsFragment : Fragment(R.layout.settings_layout) {
                         foldersTitle.text = "Manage Folders (${folders.size})"
                     }
                 }
+
+                launch {
+                    indexingViewModel.getBatteryTemperature()
+                }
+
+
                 launch {
                     indexingViewModel.folderPrefs.selectedBuckets.collectLatest { selectedFolders->
                         indexingViewModel.scanGallery()

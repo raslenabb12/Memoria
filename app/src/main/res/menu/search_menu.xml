@@ -7,6 +7,9 @@
         android:icon="@drawable/baseline_image_search_24"
         android:title="Search by Image" />
     <item
+        android:id="@+id/visual_search"
+        android:title=" Concept Search" />
+    <item
         android:id="@+id/filter"
         android:icon="@drawable/baseline_filter_list_24"
         android:title="Filter" />
