@@ -51,6 +51,8 @@ dependencies {
     implementation(libs.androidx.cardview)
     implementation(libs.androidx.fragment)
     testImplementation(libs.junit)
+    testImplementation("org.robolectric:robolectric:4.16.1")
+    testImplementation("androidx.test:core:1.7.0")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
