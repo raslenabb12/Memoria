@@ -177,7 +177,7 @@ Then open in Android Studio and run.
 - [x] Search from other apps via the share sheet
 - [x] Search history with pinned searches
 - [ ] Duplicate / near-duplicate photo detection
-- [ ] Manually add any photo to an album
+- [x] Manually add any photo to an album
 - [ ] Native in-app media actions (move, copy, delete)
 - [ ] F-Droid distribution
 
