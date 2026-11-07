@@ -12,6 +12,7 @@ recyclerview = "1.4.0"
 cardview = "1.0.0"
 fragment = "1.9.0"
 ucrop = "2.2.10"
+coreKtxVersion = "1.7.0"
 
 [libraries]
 
@@ -29,6 +30,7 @@ androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview"
 androidx-cardview = { group = "androidx.cardview", name = "cardview", version.ref = "cardview" }
 androidx-fragment = { group = "androidx.fragment", name = "fragment", version.ref = "fragment" }
 ucrop = { module = "com.github.yalantis:ucrop", version.ref = "ucrop" }
+core-ktx = { group = "androidx.test", name = "core-ktx", version.ref = "coreKtxVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

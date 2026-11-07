@@ -4,7 +4,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.graphics.toColorInt
 import androidx.recyclerview.widget.RecyclerView
+import androidx.room.Query
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.checkbox.MaterialCheckBox
 import com.youme.memoria.Gallery.FolderInfo
@@ -15,9 +17,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-class FoldersAdapter(
-    private var items: List<FolderInfo>
-) : RecyclerView.Adapter<FoldersAdapter.MyViewHolder>() {
+class FoldersAdapter() : RecyclerView.Adapter<FoldersAdapter.MyViewHolder>() {
+
+
+    private var items: List<FolderInfo> =emptyList()
+    private var filteredItems  : List<FolderInfo> = emptyList()
 
     private val _selectedFolders = MutableStateFlow<Set<String>>(emptySet())
     val selectedFoldersFlow: StateFlow<Set<String>> = _selectedFolders.asStateFlow()
@@ -42,7 +46,7 @@ class FoldersAdapter(
     }
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-        val folder = items[position]
+        val folder = filteredItems[position]
         val currentSelection = _selectedFolders.value.toMutableSet()
 
         holder.folderPath.text=folder.folderPath
@@ -50,7 +54,8 @@ class FoldersAdapter(
         holder.photosCount.text = "${folder.itemCount} photo"
         holder.checkBox.isChecked = currentSelection.contains(folder.bucketId)
 
-        holder.box.strokeWidth = if (currentSelection.contains(folder.bucketId)) 6 else 0
+        holder.box.setCardBackgroundColor(if (currentSelection.contains(folder.bucketId)) "#4ED0BCFF".toColorInt() else
+        holder.itemView.resources.getColor(R.color.neutral_17))
 
         holder.box.setOnClickListener {
             holder.checkBox.isChecked = !holder.checkBox.isChecked
@@ -76,12 +81,18 @@ class FoldersAdapter(
     override fun onViewRecycled(holder: MyViewHolder) {
         super.onViewRecycled(holder)
     }
+    fun search(query: String){
+        filteredItems = if (query.isNotEmpty())items.filter { it.bucketName.contains(query,ignoreCase = true) } else items
+        notifyDataSetChanged()
+    }
+
     fun submitData(folders : List<FolderInfo>){
         items = folders
+        filteredItems = folders
         notifyDataSetChanged()
     }
 
     override fun getItemCount(): Int {
-        return items.size
+        return filteredItems.size
     }
 }

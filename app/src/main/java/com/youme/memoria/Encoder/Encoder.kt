@@ -32,19 +32,24 @@ class MemoriaEncoder(private val context: Context) {
         const val CONTEXT_LENGTH = 77
     }
 
-    fun initializeImageEncoder(){
-        val options = Interpreter.Options().apply {
-            numThreads = 4
-            useXNNPACK = true
-            try {
-                imageNnDelegate = NnApiDelegate()
+    fun initializeImageEncoder() {
+        val model = loadModel("mobileclip_s0_image_v2.tflite")
+        try {
+            imageNnDelegate = NnApiDelegate()
+            val opts = Interpreter.Options().apply {
+                numThreads = 4
                 addDelegate(imageNnDelegate)
-            } catch (e: Exception) {
-                "test"
             }
+            imageInterpreter = Interpreter(model, opts)
+        } catch (e: Throwable) {
+            Log.w("MemoriaEncoder", "NNAPI failed, using CPU", e)
+            imageNnDelegate?.close()
+            imageNnDelegate = null
+            imageInterpreter = Interpreter(model, Interpreter.Options().apply {
+                numThreads = 4
+                useXNNPACK = true
+            })
         }
-        imageInterpreter = Interpreter(loadModel("mobileclip_s0_image_v2.tflite"), options)
-
     }
 
     fun initializeTextEncoder() {

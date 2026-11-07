@@ -12,8 +12,8 @@ android {
         applicationId = "com.youme.memoria"
         minSdk = 28
         targetSdk = 36
-        versionCode = 10
-        versionName = "v1.8.0-Beta"
+        versionCode = 11
+        versionName = "v1.9.0-Beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -50,6 +50,7 @@ dependencies {
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.cardview)
     implementation(libs.androidx.fragment)
+    implementation(libs.core.ktx)
     testImplementation(libs.junit)
     testImplementation("org.robolectric:robolectric:4.16.1")
     testImplementation("androidx.test:core:1.7.0")

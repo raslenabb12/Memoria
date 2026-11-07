@@ -24,8 +24,7 @@ class AlbumAdapter(
 
     class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val title: TextView = itemView.findViewById(R.id.textView22)
-        val countText: TextView = itemView.findViewById(R.id.textView23)
-        val checkMark: ImageView = itemView.findViewById(R.id.imageView18)
+        val countText: TextView = itemView.findViewById(R.id.textView43)
         val imageViewList = listOf(R.id.imageView8,R.id.imageView9,R.id.imageView10,R.id.imageView11,)
         val box: MaterialCardView = itemView.findViewById(R.id.cardView9)
 
@@ -40,7 +39,7 @@ class AlbumAdapter(
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         val albumlist = items[position]
-        holder.countText.text = albumlist.size.toString()
+        holder.countText.text = "${albumlist.size} item${if (albumlist.size>1)"s" else ""}"
         holder.title.text  = albumlist.name
         albumlist.images.forEachIndexed { i ,item->
             val imageview= holder.itemView.findViewById<ImageView>(holder.imageViewList[i])
@@ -54,8 +53,6 @@ class AlbumAdapter(
             if (isSelected) {scaleX=0.9f;scaleY=0.9f} else {scaleX=1f;scaleY=1f}
         }
         holder.box.strokeWidth = if (isSelected) 10 else 0
-        holder.checkMark.isVisible = isSelected
-        holder.countText.isVisible=!isSelected
 
 
         holder.itemView.setOnClickListener {

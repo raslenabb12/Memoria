@@ -1,11 +1,13 @@
 package com.youme.memoria.imageViewer
 
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.media.Image
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
@@ -22,6 +24,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.paging.PagingData
+import androidx.paging.flatMap
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.bottomappbar.BottomAppBar
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -34,8 +37,10 @@ import com.youme.memoria.R
 import com.youme.memoria.imageViewer.Album.AddToAlbumBottomSheet
 import com.youme.memoria.search.SearchResultCache
 import com.youme.memoria.search.searchActivity
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import kotlin.getValue
 
@@ -98,10 +103,17 @@ class imageViewerActivity : AppCompatActivity(){
                     Adatper.submitData(PagingData.from(searchData))
                 }
             } else {
-                val viewModel = GalleryViewModel(GalleryRepository(contentResolver))
-                viewModel.imageViewerFlow(tappedPosition).collectLatest {
-                    Adatper.submitData(it)
+                val startId = intent.getLongExtra("imageId", -1L)
+
+                lifecycleScope.launch {
+                    val ids = queryAllImageIds(contentResolver)
+
+
+                    val viewModel = GalleryViewModel(GalleryRepository(contentResolver))
+                    viewModel.imageViewerFlow(tappedPosition, ids.size).collectLatest { Adatper.submitData(it) }
+
                 }
+
             }
 
         }
@@ -154,6 +166,19 @@ class imageViewerActivity : AppCompatActivity(){
 
         startActivity(Intent.createChooser(shareIntent, "Share image"))
     }
+    suspend fun queryAllImageIds(contentResolver: ContentResolver): LongArray =
+        withContext(Dispatchers.IO) {
+            val ids = ArrayList<Long>()
+            contentResolver.query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                arrayOf(MediaStore.Images.Media._ID),
+                null, null,
+                "${MediaStore.Images.Media.DATE_TAKEN} DESC, ${MediaStore.Images.Media._ID} DESC"
+            )?.use {
+                while (it.moveToNext()) ids.add(it.getLong(0))
+            }
+            ids.toLongArray()
+        }
     private fun setupPadding(){
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { view, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())

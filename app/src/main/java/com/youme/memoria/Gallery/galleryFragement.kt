@@ -2,6 +2,7 @@ package com.youme.memoria.Gallery
 
 
 import android.Manifest
+import android.content.ContentUris
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -23,6 +24,8 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.paging.PagingData
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.google.android.material.appbar.MaterialToolbar
@@ -41,7 +44,7 @@ import kotlinx.coroutines.launch
 
 class GalleryFragement  : Fragment(R.layout.gallery_layout){
 
-    private lateinit var Adapter: ImagePagingAdapter
+    private lateinit var Adapter: GalleryDateAdapter
 
     private lateinit var repo: PhotoRepository
     private lateinit var observer: GalleryObserver
@@ -62,20 +65,20 @@ class GalleryFragement  : Fragment(R.layout.gallery_layout){
         super.onViewCreated(view, savedInstanceState)
         repo = PhotoRepository(requireContext())
 
-        Adapter = ImagePagingAdapter(){imageview ,position->
-            val intent = Intent(requireContext(), imageViewerActivity::class.java)
-            intent.putExtra("pos",position)
-            startActivity(intent,)
+        Adapter = GalleryDateAdapter(){uri->
+            viewLifecycleOwner.lifecycleScope.launch {
+                val pos = repo.getImagePosition(requireContext().contentResolver,uri)
+                val intent = Intent(requireContext(), imageViewerActivity::class.java)
+                intent.putExtra("pos",pos)
+                intent.putExtra("imageId", ContentUris.parseId(uri))
+                startActivity(intent,)
+            }
+
         }
 
 
         val recyclerView = view.findViewById<RecyclerView>(R.id.rec)
-        val layoutManager = StaggeredGridLayoutManager(
-            2,
-            StaggeredGridLayoutManager.VERTICAL
-        )
-        layoutManager.gapStrategy =
-            StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS
+        val layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL,false)
 
         recyclerView.apply {
             this.layoutManager = layoutManager

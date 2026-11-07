@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/select_all"
+        android:icon="@drawable/baseline_select_all_24"
+        android:title="@android:string/selectAll"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/deselect"
+        android:icon="@drawable/baseline_deselect_24"
+        android:title="Deselect"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/delete"
+        android:icon="@drawable/baseline_delete_outline_24"
+        android:title="Remove"
+        app:showAsAction="ifRoom" />
+
+
+</menu>

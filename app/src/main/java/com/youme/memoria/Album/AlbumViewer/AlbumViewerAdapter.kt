@@ -17,6 +17,7 @@ class AlbumViewerAdapter(
     private var items: List<AlbumPhotoEntity>,
     private var onItemSelected : (selected: MutableList<String>,photos:List<AlbumPhotoEntity>) -> Unit,
     private var onItemClick : (position: Int) -> Unit,
+    private var enableSelection : Boolean = true,
 ) : RecyclerView.Adapter<AlbumViewerAdapter.MyViewHolder>() {
 
     val selected =mutableListOf<String>()
@@ -48,16 +49,15 @@ class AlbumViewerAdapter(
 
 
         holder.itemView.setOnLongClickListener {
-            if (selected.isEmpty()){
+            if (selected.isEmpty() && enableSelection){
                 selected.add(photo.uri)
                 onItemSelected(selected,items)
                 notifyItemChanged(position)
-
             }
             true
         }
         holder.itemView.setOnClickListener {
-            if (selected.isNotEmpty()){
+            if (selected.isNotEmpty() ){
                 if (selected.contains(photo.uri)) selected.remove(photo.uri) else  selected.add(photo.uri)
                 onItemSelected(selected,items)
                 notifyItemChanged(position)

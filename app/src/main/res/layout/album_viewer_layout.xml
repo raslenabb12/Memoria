@@ -29,89 +29,13 @@
         app:titleCentered="true"
         app:titleTextColor="@android:color/white" />
 
-    <androidx.cardview.widget.CardView
-        android:id="@+id/cardView10"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        android:visibility="gone"
-        app:cardBackgroundColor="@color/neutral_17"
-        app:cardCornerRadius="15dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/materialToolbar2">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginEnd="10dp"
-            android:layout_marginBottom="5dp"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/button13"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:layout_gravity="center"
-                android:layout_weight="1"
-                android:backgroundTint="@color/primary_80"
-                android:fontFamily="@font/hanken_grotesk"
-                android:text="@android:string/selectAll"
-                android:textColor="@android:color/black"
-                android:textSize="14sp"
-                app:cornerRadius="10dp"
-                app:iconGravity="textStart"
-                app:iconTint="@android:color/white" />
-
-            <Button
-                android:id="@+id/button12"
-                style="@style/Widget.Material3.Button.IconButton"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:layout_gravity="center"
-                android:layout_weight="1"
-                android:paddingTop="5dp"
-                android:paddingBottom="5dp"
-                android:text="Deselect all"
-                android:textAppearance="@style/TextAppearance.Memoria.BodyLarge"
-                android:textSize="14sp"
-                app:cornerRadius="10dp"
-                app:iconGravity="textStart" />
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rec"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="6dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/cardView10" />
-
-    <Button
-        android:id="@+id/button11"
-        android:layout_width="0dp"
-        android:layout_height="60dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginEnd="24dp"
-        android:layout_marginBottom="16dp"
-        android:backgroundTint="@color/primary_80"
-        android:fontFamily="@font/hanken_grotesk"
-        android:text="Remove"
-        android:textColor="@android:color/black"
-        android:textStyle="bold"
-        android:visibility="gone"
-        app:cornerRadius="15dp"
-        app:icon="@drawable/baseline_delete_24"
-        app:iconGravity="textStart"
-        app:iconTint="@android:color/black"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/materialToolbar2" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

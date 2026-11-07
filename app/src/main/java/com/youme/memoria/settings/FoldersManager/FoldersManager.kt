@@ -7,13 +7,16 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.TextView
 import androidx.core.view.isVisible
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.room.util.query
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -50,8 +53,8 @@ class FoldersManager : BottomSheetDialogFragment(R.layout.folders_manager_layout
         super.onViewCreated(view, savedInstanceState)
         val folderPref = indexingViewModel.folderPrefs
         val saveButton = requireView().findViewById<MaterialButton>(R.id.button17)
-        Adapter= FoldersAdapter(emptyList())
-        setupRecyclerView()
+        Adapter= FoldersAdapter()
+        setupSearch()
 
         saveButton.setOnClickListener {
             lifecycleScope.launch {
@@ -69,6 +72,7 @@ class FoldersManager : BottomSheetDialogFragment(R.layout.folders_manager_layout
                 launch {
                     folderPref.selectedBuckets.collectLatest {selectedBuckets->
                         Adapter.setSelected(selectedBuckets)
+                        setupRecyclerView()
                     }
                 }
                 launch {
@@ -90,6 +94,12 @@ class FoldersManager : BottomSheetDialogFragment(R.layout.folders_manager_layout
 
 
     }
+    private fun setupSearch(){
+        val searchInputText = requireView().findViewById<TextView>(R.id.searchInput)
+        searchInputText.doAfterTextChanged { query->
+            Adapter.search(query.toString())
+        }
+    }
 
     private fun setupRecyclerView(){
         val recyclerView = requireView().findViewById<RecyclerView>(R.id.recyclerView)
@@ -102,7 +112,7 @@ class FoldersManager : BottomSheetDialogFragment(R.layout.folders_manager_layout
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 indexingViewModel.folders.collectLatest {folders->
                     Adapter.submitData(folders)
-
+                    requireView().findViewById<View>(R.id.progress).isVisible=false
                 }
             }
 

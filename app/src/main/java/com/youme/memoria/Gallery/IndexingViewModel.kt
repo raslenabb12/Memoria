@@ -234,7 +234,7 @@ class IndexingViewModel(
                     if (imglist.isNotEmpty())  _state.value = IndexingState.Ready(indexedInScope,imglist.size)
                 }
             }catch (e: Exception){
-
+                Log.e("Cleanup", "prune failed", e)
             }
         }
 

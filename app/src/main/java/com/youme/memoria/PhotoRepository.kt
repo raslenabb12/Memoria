@@ -1,5 +1,6 @@
 package com.youme.memoria
 
+import android.content.ContentResolver
 import android.content.ContentUris
 import android.content.Context
 import android.graphics.Bitmap
@@ -284,6 +285,25 @@ class PhotoRepository(context: Context) {
             }
         }
         return imglist
+    }
+    suspend fun getImagePosition(
+        contentResolver: ContentResolver,
+        image: Uri
+    ): Int = withContext(Dispatchers.IO) {
+        val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        val imageId = ContentUris.parseId(image)
+        val dateTaken = contentResolver.query(
+            uri, arrayOf(MediaStore.Images.Media.DATE_TAKEN),
+            "${MediaStore.Images.Media._ID} = ?", arrayOf(imageId.toString()), null
+        )?.use { if (it.moveToFirst()) it.getLong(0) else null } ?: return@withContext -1
+
+        contentResolver.query(
+            uri, arrayOf(MediaStore.Images.Media._ID),
+            "${MediaStore.Images.Media.DATE_TAKEN} > ? OR " +
+                    "(${MediaStore.Images.Media.DATE_TAKEN} = ? AND ${MediaStore.Images.Media._ID} > ?)",
+            arrayOf(dateTaken.toString(), dateTaken.toString(), imageId.toString()),
+            null
+        )?.use { it.count } ?: -1
     }
     fun uriToBitmap(context: Context, uri: Uri): Bitmap {
         val source = ImageDecoder.createSource(context.contentResolver, uri)

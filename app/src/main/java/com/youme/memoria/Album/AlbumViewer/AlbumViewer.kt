@@ -12,14 +12,17 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.view.menu.MenuBuilder
 import androidx.cardview.widget.CardView
 import androidx.core.net.toUri
+import androidx.core.view.isEmpty
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.bottomappbar.BottomAppBar
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -80,7 +83,6 @@ class AlbumPhotoViewer(private val albumId:String,private val title:String) : Bo
 
         setupRecyclerView()
         setupUI()
-        setupSelectDeselect()
 
     }
     private fun  setupUI(){
@@ -93,38 +95,40 @@ class AlbumPhotoViewer(private val albumId:String,private val title:String) : Bo
             }
         }
     }
-    private fun setupSelectDeselect(){
-        val selectAllButton  = requireView().findViewById<Button>(R.id.button13)
-        val deselectAllButton  = requireView().findViewById<Button>(R.id.button12)
-        selectAllButton.setOnClickListener {
-            Adapter.selectAll()
-        }
-        deselectAllButton.setOnClickListener {
-            Adapter.deselectAll()
-        }
-    }
     private fun setupSelectedUi(selected: List<String>, photosList: List<AlbumPhotoEntity>){
         val toolbar = requireView().findViewById<MaterialToolbar>(R.id.materialToolbar2)
-        val deleteButton = requireView().findViewById<Button>(R.id.button11)
-        val selectionToolBar = requireView().findViewById<CardView>(R.id.cardView10)
-
-
-        toolbar.title = if (selected.isNotEmpty()) "${selected.size} selected" else title
-        selectionToolBar.animateVisibility(selected.isNotEmpty())
-
-        deleteButton.apply {
-            text = "Remove (${selected.size})"
-            animateVisibility(selected.isNotEmpty())
+        toolbar.title =  if (selected.isNotEmpty()) "${selected.size} selected" else title
+        toolbar.apply {
+            setNavigationOnClickListener {
+                if (selected.isEmpty()) dismiss() else Adapter.deselectAll()
+            }
+            isTitleCentered = selected.isEmpty()
+            if (selected.isEmpty()) menu.clear() else {
+                if (menu.isEmpty()) inflateMenu(R.menu.album_viewer_menu)
+            }
         }
 
-
-        deleteButton.setOnClickListener {
-            deleteAlert(
-                requireContext(),
-                "Delete Photos?",
-                "Are you sure you want to delete ${selected.size} photo${if (selected.size == 1) "" else "s"} from this album?"
-            ) {
-                viewModuel.deleteAlbumPhotos(selected, Adapter, photosList)
+        toolbar.setOnMenuItemClickListener { item->
+            when(item.itemId){
+                R.id.delete->{
+                    deleteAlert(
+                        requireContext(),
+                        "Delete Photos?",
+                        "Are you sure you want to delete ${selected.size} photo${if (selected.size == 1) "" else "s"} from this album?"
+                    ) {
+                        viewModuel.deleteAlbumPhotos(selected, Adapter, photosList)
+                    }
+                    true
+                }
+                R.id.select_all->{
+                    Adapter.selectAll()
+                    true
+                }
+                R.id.deselect->{
+                    Adapter.deselectAll()
+                    true
+                }
+                else -> false
             }
         }
     }
