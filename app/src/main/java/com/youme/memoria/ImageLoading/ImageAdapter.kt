@@ -25,11 +25,12 @@ class ImageDiffCallback : DiffUtil.ItemCallback<ImageUriItem>() {
     override fun areContentsTheSame(old: ImageUriItem, new: ImageUriItem) = old == new
 }
 
-class ImagePagingAdapter(val onImageClick :(ImageView,Int) -> Unit) : PagingDataAdapter<ImageUriItem, ImagePagingAdapter.VH>(ImageDiffCallback()) {
+class ImagePagingAdapter(val spanCount: Int = 2,val onImageClick :(ImageView,Int) -> Unit) : PagingDataAdapter<ImageUriItem, ImagePagingAdapter.VH>(ImageDiffCallback()) {
 
     class VH(view: View) : RecyclerView.ViewHolder(view) {
         val imageView: ImageView = view.findViewById(R.id.imageView)
     }
+
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
         val view = LayoutInflater.from(parent.context)
@@ -39,7 +40,7 @@ class ImagePagingAdapter(val onImageClick :(ImageView,Int) -> Unit) : PagingData
 
     override fun onBindViewHolder(holder: VH, position: Int) {
         val item = getItem(position) ?: return
-        val baseWidth = holder.itemView.resources.displayMetrics.widthPixels / 2
+        val baseWidth = holder.itemView.resources.displayMetrics.widthPixels / spanCount
         holder.imageView.layoutParams.height = (baseWidth * item.ratio).toInt()
 
         Glide.with(holder.itemView.context)

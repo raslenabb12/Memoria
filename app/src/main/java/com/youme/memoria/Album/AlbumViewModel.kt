@@ -2,12 +2,12 @@ package com.youme.memoria.Album
 
 import android.app.Application
 import android.net.Uri
-import android.util.Log
 import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
 import com.youme.memoria.Album.AlbumViewer.AlbumViewerAdapter
+import com.youme.memoria.Album.data.AlbumRepo
 import com.youme.memoria.PhotoRepository
 import com.youme.memoria.Preset
 import com.youme.memoria.roomCach.AlbumPhotoEntity
@@ -112,7 +112,7 @@ class AlbumViewModel(application: Application): AndroidViewModel(application){
     private fun updateEmbeddingsByNameSearch(albumName:String,albumId: String){
         viewModelScope.launch {
             photoRepo.initializeTextModel()
-            val photosList = photoRepo.search(albumName,photoDao.getAll(), Preset.BALANCED.score)
+            val photosList = photoRepo.search(albumName,photoDao.getAll(), 0.19f)
             albumRepo.addPhotosToAlbum(photosList.map { AlbumPhotoEntity(albumId,it.first.uri) })
             dao.updateCentroidEmbedding(albumId,albumRepo.computeCentroid(photosList.map { it.first.embedding.toFloatArray() }).toByteArray())
         }

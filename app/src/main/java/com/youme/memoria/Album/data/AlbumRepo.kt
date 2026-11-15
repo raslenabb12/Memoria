@@ -1,14 +1,10 @@
-package com.youme.memoria.Album
+package com.youme.memoria.Album.data
 
 import android.content.Context
-import androidx.core.net.toUri
 import com.youme.memoria.Encoder.MemoriaEncoder
-import com.youme.memoria.Encoder.MemoriaEncoder.Companion.EMBED_DIM
 import com.youme.memoria.roomCach.AlbumEntity
 import com.youme.memoria.roomCach.AlbumPhotoEntity
 import com.youme.memoria.roomCach.PhotosDatabase
-import kotlinx.coroutines.flow.first
-
 
 class AlbumRepo (context: Context) {
 
@@ -31,7 +27,7 @@ class AlbumRepo (context: Context) {
 
     }
     fun computeCentroid(embeddings: List<FloatArray>): FloatArray {
-        val avg = FloatArray(EMBED_DIM)
+        val avg = FloatArray(MemoriaEncoder.EMBED_DIM)
         embeddings.forEach { emb -> emb.forEachIndexed { i, v -> avg[i] += v } }
         for (i in avg.indices) avg[i] /= embeddings.size
         return memoriaEncoder.l2Normalize(avg)

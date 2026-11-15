@@ -5,19 +5,26 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.graphics.toColorInt
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Query
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.checkbox.MaterialCheckBox
 import com.youme.memoria.Gallery.FolderInfo
 import com.youme.memoria.R
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
-class FoldersAdapter() : RecyclerView.Adapter<FoldersAdapter.MyViewHolder>() {
+class FoldersAdapter(val lifecycle: LifecycleCoroutineScope) : RecyclerView.Adapter<FoldersAdapter.MyViewHolder>() {
 
 
     private var items: List<FolderInfo> =emptyList()
@@ -31,6 +38,7 @@ class FoldersAdapter() : RecyclerView.Adapter<FoldersAdapter.MyViewHolder>() {
         val title: TextView = itemView.findViewById(R.id.textView26)
         val photosCount: TextView = itemView.findViewById(R.id.textView27)
         val folderPath: TextView = itemView.findViewById(R.id.textView24)
+        val recyclerView : RecyclerView = itemView.findViewById(R.id.recyclerView2)
         val checkBox : MaterialCheckBox = itemView.findViewById<MaterialCheckBox>(R.id.checkBox)
         val box: MaterialCardView = itemView.findViewById(R.id.box)
 
@@ -48,6 +56,7 @@ class FoldersAdapter() : RecyclerView.Adapter<FoldersAdapter.MyViewHolder>() {
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         val folder = filteredItems[position]
         val currentSelection = _selectedFolders.value.toMutableSet()
+
 
         holder.folderPath.text=folder.folderPath
         holder.title.text= folder.bucketName

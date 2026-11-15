@@ -28,13 +28,8 @@ import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.textfield.TextInputEditText
 import com.youme.memoria.Album.AlbumViewer.AlbumViewerAdapter
-import com.youme.memoria.Gallery.IndexingViewModel
-import com.youme.memoria.ImageLoading.ImagePagingAdapter
-import com.youme.memoria.ImageLoading.ImageUriItem
-import com.youme.memoria.PhotoRepository
 import com.youme.memoria.R
 import com.youme.memoria.roomCach.AlbumPhotoEntity
-import com.youme.memoria.search.SearchViewModuel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlin.getValue

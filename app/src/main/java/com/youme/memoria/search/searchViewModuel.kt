@@ -22,6 +22,11 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 
+
+
+enum class SearchLayout{ STAGGERED,DATEBLOCKS }
+
+
 sealed class SearchState {
     object Loading : SearchState()
     data class Success(val results: List<Pair<PhotoEntity, Float>>) : SearchState()
@@ -31,6 +36,8 @@ class SearchViewModuel(application: Application): AndroidViewModel(application) 
     private val repo = PhotoRepository(application)
     private val searchQuery = MutableStateFlow("")
     val searchImage = MutableStateFlow<Uri?>(null)
+
+    val searchLayout = MutableStateFlow<SearchLayout>(SearchLayout.STAGGERED)
 
     val weightsSearch = MutableStateFlow<ByteArray>(ByteArray(0))
     val searchfilters  = MutableStateFlow<SearchFilters>(SearchFilters(null,null,emptyList(),null))
@@ -58,6 +65,10 @@ class SearchViewModuel(application: Application): AndroidViewModel(application) 
     }
     fun setSearchImage(image: Uri?){
         searchImage.value = image
+    }
+
+    fun setSearchLayout(searchLayout: SearchLayout){
+        this.searchLayout.value = searchLayout
     }
 }
 

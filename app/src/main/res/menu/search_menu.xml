@@ -10,4 +10,9 @@
         android:id="@+id/filter"
         android:icon="@drawable/baseline_filter_list_24"
         android:title="Filter" />
+    <item
+        android:id="@+id/sort_view"
+        android:icon="@drawable/grid_layout"
+        android:title="Sort"
+        app:showAsAction="always" />
 </menu>

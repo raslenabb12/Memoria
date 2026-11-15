@@ -14,15 +14,19 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.PopupWindow
 import android.widget.ProgressBar
+import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDialog
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityOptionsCompat
+import androidx.core.app.DialogCompat
 import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -48,21 +52,29 @@ import com.google.android.material.search.SearchView
 import com.google.android.material.textfield.TextInputEditText
 import com.yalantis.ucrop.UCrop
 import com.youme.memoria.Album.deleteAlert
+import com.youme.memoria.Gallery.DateImageBlocks
+import com.youme.memoria.Gallery.GalleryDateAdapter
 import com.youme.memoria.ImageLoading.ImagePagingAdapter
 import com.youme.memoria.ImageLoading.ImageUriItem
 import com.youme.memoria.PhotoRepository
 import com.youme.memoria.R
 import com.youme.memoria.imageViewer.imageViewerActivity
+import com.youme.memoria.roomCach.PhotoEntity
 import com.youme.memoria.search.searchHistory.SearchHistroyAdapter
 import com.youme.memoria.search.searchHistory.SearchHistroyViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class searchActivity : AppCompatActivity() {
-    private lateinit var Adapter: ImagePagingAdapter
+    private lateinit var adapterDateBlocks: GalleryDateAdapter
+    private lateinit var adapterStaggeredGrid: ImagePagingAdapter
     private val searchViewModuel : SearchViewModuel by viewModels()
     private val searchHistroyViewModuel : SearchHistroyViewModel by viewModels()
     private lateinit var historyAdapter: SearchHistroyAdapter
@@ -85,20 +97,26 @@ class searchActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.search_layout)
         setupPadding()
-        Adapter = ImagePagingAdapter(){imageview ,position->
-
-
+        adapterDateBlocks = GalleryDateAdapter(){ uri->
             val intent = Intent(this@searchActivity, imageViewerActivity::class.java)
 
-            intent.putExtra("pos",position)
+            intent.putExtra("pos", SearchResultCache.searchResults?.indexOfFirst { it.uri == uri })
             intent.putExtra("from_search",true)
-            //intent.putExtra("matchContext",findViewById<TextInputEditText>(R.id.textedit).text.toString())
-
 
             startActivity(intent)
 
+        }
+        adapterStaggeredGrid = ImagePagingAdapter(){_,pos->
+            val intent = Intent(this@searchActivity, imageViewerActivity::class.java)
+
+            intent.putExtra("pos", pos)
+            intent.putExtra("from_search",true)
+
+            startActivity(intent)
 
         }
+
+
         repo = PhotoRepository(this@searchActivity)
 
         val searchUri = intent.getStringExtra("uri")
@@ -106,20 +124,7 @@ class searchActivity : AppCompatActivity() {
             searchViewModuel.setSearchImage(it.toUri())
         }
 
-        val recyclerView = findViewById<RecyclerView>(R.id.rec)
-        val layoutManager = StaggeredGridLayoutManager(
-            2,
-            StaggeredGridLayoutManager.VERTICAL
-        )
-        layoutManager.gapStrategy =
-            StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS
-
-        recyclerView.apply {
-            this.layoutManager = layoutManager
-            adapter = Adapter
-            itemAnimator = null
-        }
-
+        setupRecyclerView()
         setupSearch()
 
         setupFilterObserver()
@@ -127,6 +132,45 @@ class searchActivity : AppCompatActivity() {
         setupTopBar()
         setupSearchHistory()
         handleShareIntent(intent)
+    }
+
+    private fun setupRecyclerView(){
+
+        val recyclerView = findViewById<RecyclerView>(R.id.rec)
+        val staggeredLayoutManager = StaggeredGridLayoutManager(
+            2,
+            StaggeredGridLayoutManager.VERTICAL
+        )
+        staggeredLayoutManager.gapStrategy =
+            StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS
+
+        lifecycleScope.launch {
+
+            searchViewModuel.searchLayout.collectLatest { layout ->
+                when(layout){
+                    SearchLayout.STAGGERED->{
+                        recyclerView.apply {
+                            this.layoutManager = staggeredLayoutManager
+                            adapter = adapterStaggeredGrid
+                            itemAnimator = null
+                        }
+                    }
+                    SearchLayout.DATEBLOCKS->{
+                        recyclerView.apply {
+                            this.layoutManager = LinearLayoutManager(this@searchActivity, LinearLayoutManager.VERTICAL,false)
+                            adapter = adapterDateBlocks
+                            itemAnimator = null
+                        }
+                    }
+                }
+
+            }
+
+        }
+
+
+
+
 
     }
 
@@ -150,6 +194,32 @@ class searchActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun showSortDialog(ancher : View){
+        val popupView = layoutInflater.inflate(R.layout.dialog_sort, null)
+        val popupWindow = PopupWindow(popupView,250,300)
+
+
+        popupWindow.isOutsideTouchable = true
+
+        val radioGroup = popupView.findViewById<RadioGroup>(R.id.radio_group)
+
+        lifecycleScope.launch {
+            when(searchViewModuel.searchLayout.first()){
+                SearchLayout.STAGGERED->{ radioGroup.check(R.id.staggerd)}
+                SearchLayout.DATEBLOCKS->{ radioGroup.check(R.id.dateBlocks)}
+            }
+        }
+
+        radioGroup.setOnCheckedChangeListener { _, id ->
+            when(id){
+                R.id.staggerd->{searchViewModuel.setSearchLayout(SearchLayout.STAGGERED)}
+                R.id.dateBlocks->{ searchViewModuel.setSearchLayout(SearchLayout.DATEBLOCKS) }
+            }
+        }
+
+        popupWindow.showAsDropDown(ancher)
     }
     private fun setupImageSearch() {
         val container = findViewById<LinearLayout>(R.id.linearLayout2)
@@ -218,8 +288,7 @@ class searchActivity : AppCompatActivity() {
             when(item.itemId){
                 R.id.image_search->{ pickedImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))}
                 R.id.filter->{FilterBottomFrag().show(supportFragmentManager,"") }
-                //R.id.visual_search->{ VisualConceptBottomFrag().show(supportFragmentManager,"") }
-                else -> false
+                R.id.sort_view->{showSortDialog(toolbar.findViewById<View>(R.id.sort_view))}
             }
             true
         }
@@ -247,17 +316,37 @@ class searchActivity : AppCompatActivity() {
                             findViewById<View>(R.id.emptyState).isVisible= state.results.isEmpty()
 
 
+
+                            val fmt = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
+                            val dateBlocks =state.results.groupBy { (it.second*100).toInt() }.map { Pair(it.key,it.value.map {item-> item.first }
+                                .groupBy {item-> fmt.format(Date(item.dateTaken?:0)) }.map { DateImageBlocks(it.key,it.value.map {  ImageUriItem(uri = it.uri.toUri(), height = it.height, width = it.width, id = it.uri.hashCode().toLong()) }.toMutableList()) }) }
+                                .flatMap {it.second}
+
+
+
                             val mappedList = state.results.map { it.first }.map {
                                 ImageUriItem(uri = it.uri.toUri(), height = it.height, width = it.width, id = it.uri.hashCode().toLong())
                             }
-                            SearchResultCache.searchResults = mappedList
+
+                            SearchResultCache.searchResults = dateBlocks.flatMap { it.images }
                             try {
                                 (recyclerView.layoutManager as StaggeredGridLayoutManager).invalidateSpanAssignments()
                             } catch (e: Exception) {
                                 ""
                             }
+                            adapterStaggeredGrid.submitData(lifecycle,PagingData.from(mappedList))
+                            adapterDateBlocks.submitData(lifecycle,PagingData.from(dateBlocks))
 
-                            Adapter.submitData(lifecycle,PagingData.from(mappedList))
+
+                            lifecycleScope.launch {
+                                searchViewModuel.searchLayout.collectLatest { layout ->
+                                    when(layout){
+                                        SearchLayout.STAGGERED->{ SearchResultCache.searchResults = mappedList }
+                                        SearchLayout.DATEBLOCKS->{ SearchResultCache.searchResults = dateBlocks.flatMap { it.images } }
+                                    }
+                                }
+                            }
+
 
 
                         }
@@ -269,7 +358,12 @@ class searchActivity : AppCompatActivity() {
                     }
                 }
         }
-        Adapter.addOnPagesUpdatedListener {
+        adapterStaggeredGrid.addOnPagesUpdatedListener {
+            recyclerView.post {
+                recyclerView.scrollToPosition(0)
+            }
+        }
+        adapterDateBlocks.addOnPagesUpdatedListener {
             recyclerView.post {
                 recyclerView.scrollToPosition(0)
             }
@@ -280,7 +374,8 @@ class searchActivity : AppCompatActivity() {
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 val query = searchView.getEditText().text.toString()
                 lifecycleScope.launch {
-                    Adapter.submitData(PagingData.from(emptyList()))
+                    adapterDateBlocks.submitData(PagingData.from(emptyList()))
+                    adapterStaggeredGrid.submitData(PagingData.from(emptyList()))
                 }
 
                 searchViewModuel.setSearchQuery(query)

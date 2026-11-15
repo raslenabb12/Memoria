@@ -46,6 +46,9 @@ class AlbumViewerAdapter(
         holder.checkMark.isVisible = isSelected
 
         holder.box.strokeWidth = if (isSelected) 10 else 0
+        holder.box.apply {
+            if (isSelected) {scaleX=0.9f;scaleY=0.9f} else {scaleX=1f;scaleY=1f}
+        }
 
 
         holder.itemView.setOnLongClickListener {

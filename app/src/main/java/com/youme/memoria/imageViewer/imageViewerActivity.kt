@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.media.Image
 import android.net.Uri
 import android.os.Bundle
@@ -26,8 +27,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.paging.PagingData
 import androidx.paging.flatMap
 import androidx.viewpager2.widget.ViewPager2
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomappbar.BottomAppBar
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.progressindicator.CircularProgressIndicator
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.yalantis.ucrop.UCrop
 import com.youme.memoria.Album.AlbumViewModel
 import com.youme.memoria.Album.deleteAlert
@@ -52,29 +57,72 @@ class imageViewerActivity : AppCompatActivity(){
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.imageview_activity)
-        Adatper = ImagePagerAdapter()
-
-        findViewById<ImageButton>(R.id.imageButton2).setOnClickListener {
-            finishAfterTransition()
-        }
+        Adatper = ImagePagerAdapter({
+            toggleBarsVisibility()
+        },{})
 
 
         setupViewPager()
         setupUi()
         setupPadding()
         setupBottomAppBar()
+
     }
 
     private fun setupUi(){
         val viewpager2= findViewById<ViewPager2>(R.id.viewpager)
+        val toolbar  = findViewById<MaterialToolbar>(R.id.materialToolbar3)
+        val swipeDownLayout = findViewById<SwipeDownLayout>(R.id.swipeDown)
+        val progress = findViewById<CircularProgressIndicator>(R.id.progress)
 
-
-        findViewById<View>(R.id.materialButton2).setOnClickListener {
-            val intent = Intent(this@imageViewerActivity, searchActivity::class.java)
-            intent.putExtra("uri",Adatper.peek(viewpager2.currentItem)?.uri.toString())
-            startActivity(intent)
+        swipeDownLayout.onDismiss= {
+            finish()
+            overridePendingTransition(0, android.R.anim.fade_out)
         }
 
+        swipeDownLayout.onDragProgress = {progres,_->
+
+            findViewById<MaterialCardView>(R.id.progressBox).apply {
+                isVisible=(progres*100)>0
+                setCardBackgroundColor(if (progress.progress==progress.max) resources.getColor(R.color.primary_80) else Color.TRANSPARENT)
+            }
+
+
+            progress.progress = (progres*100).toInt()
+
+        }
+
+
+        toolbar.setNavigationOnClickListener {
+            finish()
+        }
+
+        Adatper.addOnPagesUpdatedListener {
+            toolbar.setOnMenuItemClickListener { item->
+                when(item.itemId){
+                    R.id.find_similar->{
+                        val intent = Intent(this@imageViewerActivity, searchActivity::class.java)
+                        intent.putExtra("uri",Adatper.peek(viewpager2.currentItem)?.uri.toString())
+                        startActivity(intent)
+                        true
+                    }
+                    R.id.show_albums->{
+                        val currentItem = Adatper.peek(viewpager2.currentItem)
+                        AddToAlbumBottomSheet(currentItem?.uri.toString()).show(supportFragmentManager,"")
+                        true
+                    }
+                    else -> false
+                }
+            }
+        }
+
+
+    }
+    private fun toggleBarsVisibility(){
+        val bottomBar  = findViewById<BottomAppBar>(R.id.bottomAppBar)
+        val toolbar  = findViewById<MaterialToolbar>(R.id.materialToolbar3)
+        toolbar.isVisible = !toolbar.isVisible
+        bottomBar.isVisible =!bottomBar.isVisible
     }
     private fun setupViewPager(){
 
@@ -85,14 +133,6 @@ class imageViewerActivity : AppCompatActivity(){
         val tappedPosition = intent.getIntExtra("pos",0)
         val isFromSearch = intent.getBooleanExtra("from_search",false)
 
-        Adatper.addOnPagesUpdatedListener {
-            lifecycleScope.launch {
-                findViewById<View>(R.id.materialButton).setOnClickListener {
-                    val currentItem = Adatper.peek(viewpager2.currentItem)
-                    AddToAlbumBottomSheet(currentItem?.uri.toString()).show(supportFragmentManager,"")
-                }
-            }
-        }
 
 
 

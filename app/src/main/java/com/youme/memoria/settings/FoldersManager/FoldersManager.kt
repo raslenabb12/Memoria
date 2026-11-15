@@ -53,7 +53,7 @@ class FoldersManager : BottomSheetDialogFragment(R.layout.folders_manager_layout
         super.onViewCreated(view, savedInstanceState)
         val folderPref = indexingViewModel.folderPrefs
         val saveButton = requireView().findViewById<MaterialButton>(R.id.button17)
-        Adapter= FoldersAdapter()
+        Adapter= FoldersAdapter(lifecycleScope)
         setupSearch()
 
         saveButton.setOnClickListener {
@@ -71,6 +71,7 @@ class FoldersManager : BottomSheetDialogFragment(R.layout.folders_manager_layout
 
                 launch {
                     folderPref.selectedBuckets.collectLatest {selectedBuckets->
+
                         Adapter.setSelected(selectedBuckets)
                         setupRecyclerView()
                     }

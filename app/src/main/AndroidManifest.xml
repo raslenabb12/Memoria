@@ -36,7 +36,7 @@
                 <data android:mimeType="image/*" />
             </intent-filter>
         </activity>
-        <activity android:name=".imageViewer.imageViewerActivity" android:exported="false"/>
+        <activity android:name=".imageViewer.imageViewerActivity" android:exported="false" />
         <activity android:name=".onboarding.SetupScreen" android:exported="false"/>
         <activity android:name="com.yalantis.ucrop.UCropActivity" android:exported="false"/>
 

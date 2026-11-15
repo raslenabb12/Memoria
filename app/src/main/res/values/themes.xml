@@ -73,6 +73,9 @@
 
 
 
+    <style name="ImageViewer" parent="Base.Theme.Memoria">
+        <item name="android:statusBarColor">@color/neutral_12</item>
+    </style>
 
     <style name="TextAppearance.Memoria.HeadlineLarge" parent="TextAppearance.Material3.HeadlineLarge">
         <item name="fontFamily">@font/hanken_grotesk</item>

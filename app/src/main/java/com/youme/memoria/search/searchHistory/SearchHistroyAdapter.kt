@@ -52,6 +52,7 @@ class SearchHistroyAdapter(
         holder.timeStampText.text = item.timestamp.toTimeAgo()
         holder.pinnedImage.apply {
             setImageResource(if (item.pinned) R.drawable.baseline_push_pin_24 else R.drawable.outline_push_pin_24)
+            rotation  = if (item.pinned) 40f else 0f
             imageTintList  = ColorStateList.valueOf(if (item.pinned) Color.RED else Color.WHITE)
             setOnClickListener {
                 onPinnedClicked(item.query,item.pinned)

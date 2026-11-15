@@ -46,10 +46,12 @@ import java.io.File
 import kotlin.coroutines.cancellation.CancellationException
 enum class ThermalStatus { GREEN, ORANGE, RED }
 data class FolderInfo(
+    val rank: Int  = 0,
     val bucketId: String,
     val bucketName: String,
     val folderPath : String,
-    val itemCount: Int
+    val itemCount: Int,
+    val subFolders : List<FolderInfo> = emptyList()
 )
 class IndexingViewModelFactory(
     private val repo: PhotoRepository,
@@ -299,7 +301,7 @@ class IndexingViewModel(
                 val path  = cursor.getString(pathId)?:"Unknown"
 
                 val existing = folders[bucketId]
-                folders[bucketId] = FolderInfo(
+                folders[bucketId] = FolderInfo(0,
                     bucketId,
                     bucketName,
                     path,
@@ -307,8 +309,60 @@ class IndexingViewModel(
                 )
             }
         }
+        _Folders.value =folders.values.filter { it.itemCount>0 }.sortedByDescending { it.itemCount }
+    }
 
-        _Folders.value = folders.values.filter { it.itemCount >0 }.sortedByDescending { it.itemCount }
+    private fun FolderInfo.segments() = folderPath.split("/").filter { it.isNotEmpty() }
+
+    fun treeFolders(folders: List<FolderInfo>, depth: Int = 0): List<FolderInfo> {
+        if (folders.isEmpty()) return emptyList()
+        val rootLevel = if (depth == 0)
+            folders.filter { it.segments().isEmpty() }.map { it.copy(rank = 0) }
+        else emptyList()
+
+        val grouped = folders
+            .filter { it.segments().size > depth }
+            .groupBy { it.segments()[depth] }
+
+        val nodes = grouped.map { (segment, group) ->
+            val exact = group.firstOrNull { it.segments().size == depth + 1 }
+            val deeper = group.filter { it.segments().size > depth + 1 }
+            val subFolders = treeFolders(deeper, depth + 1)
+
+            val path = group.first().segments().take(depth + 1).joinToString("/") + "/"
+
+            when {
+
+                exact != null && subFolders.isNotEmpty() -> {
+                    val self = exact.copy(
+                        rank = depth + 1,
+                        bucketName = "/",
+                        subFolders = emptyList()
+                    )
+                    val all = listOf(self) + subFolders
+                    FolderInfo(
+                        rank = depth,
+                        bucketId = path,
+                        bucketName = segment,
+                        folderPath = path,
+                        itemCount = all.sumOf { it.itemCount },
+                        subFolders = all
+                    )
+                }
+
+                exact != null -> exact.copy(rank = depth, subFolders = emptyList())
+                else -> FolderInfo(
+                    rank = depth,
+                    bucketId = path,
+                    bucketName = segment,
+                    folderPath = path,
+                    itemCount = subFolders.sumOf { it.itemCount },
+                    subFolders = subFolders
+                )
+            }
+        }
+
+        return rootLevel + nodes
     }
     fun setPermission(value: Boolean){
         isPermissionGrandted.value=value

@@ -1,6 +1,5 @@
 package com.youme.memoria.roomCach
 
-import android.R
 import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
@@ -77,91 +76,6 @@ interface PhotoDao {
         camera: String?,
         foldersEmpty: Boolean
     ): List<PhotoEntity>
-
-}
-@Dao
-interface AlbumDao{
-
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertAlbum(album: AlbumEntity)
-
-
-    @Query("SELECT * FROM album_photo where albumId=:albumId")
-    fun getAlbumsPhotos(albumId: String): Flow<List<AlbumPhotoEntity>>
-
-    @Query("""
-    SELECT uri FROM album_photo 
-    WHERE albumId = :albumId 
-    LIMIT 3
-""")
-    suspend fun getCoverUris(albumId: Long): List<String>
-
-
-    @Query("SELECT * FROM album ")
-    fun getAllAlbums(): List<AlbumEntity>
-
-    @Query("DELETE FROM album_photo WHERE uri IN (:photoUris) and albumId=:albumId")
-    suspend fun removeAlbumPhotos(photoUris: List<String>,albumId: String)
-
-
-    @Query("select * from album_photo")
-    suspend fun albumPhotoUris() : List<AlbumPhotoEntity>
-
-
-    @Query("DELETE FROM album_photo WHERE albumId in (:albumIds)")
-    suspend fun deleteAllAlbumPhotos(albumIds: List<String>)
-    @Query("DELETE FROM album WHERE id in (:albumIds)")
-    suspend fun deleteAlbum(albumIds: List<String>)
-
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertPhotos(photos: List<AlbumPhotoEntity>)
-
-
-
-
-
-    data class AlbumWithPhotos(
-        @Embedded val album: AlbumEntity,
-        @Relation(
-            parentColumn = "id",
-            entityColumn = "albumId"
-        )
-        val photos: List<AlbumPhotoEntity>
-    )
-
-    @Query(""" update album set centroidEmbedding=:embeddings where id=:albumId """)
-    suspend fun updateCentroidEmbedding(albumId: String,embeddings: ByteArray)
-
-    @Transaction
-    @Query("SELECT * FROM album")
-    fun getAlbumsWithPhotos(): Flow<List<AlbumWithPhotos>>
-
-}
-
-@Dao
-interface SearchHistoryDao{
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(item : SearchHistoryEntity)
-
-    @Query("SELECT * FROM searchHistory order by pinned DESC , timestamp DESC ")
-    fun getSearchHistroy(): Flow<List<SearchHistoryEntity>>
-
-
-
-    @Query("select pinned from searchHistory where `query`=:query")
-    fun getPinnedStatus(query: String): Boolean?
-
-
-
-    @Query("update searchHistory set pinned =:pinned where `query`=:query  ")
-    suspend fun setPinned(query: String,pinned: Boolean)
-
-    @Query("delete from searchHistory")
-    suspend fun deleteAll()
-    @Query("delete from searchHistory where `query`=:query")
-    suspend fun deleteItem(query: String)
-
 
 }
 data class AlbumsList(

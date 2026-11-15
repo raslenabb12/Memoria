@@ -39,7 +39,7 @@ class AlbumAdapter(
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         val albumlist = items[position]
-        holder.countText.text = "${albumlist.size} item${if (albumlist.size>1)"s" else ""}"
+        holder.countText.text = "${albumlist.size} Photo${if (albumlist.size!=1)"s" else ""}"
         holder.title.text  = albumlist.name
         albumlist.images.forEachIndexed { i ,item->
             val imageview= holder.itemView.findViewById<ImageView>(holder.imageViewList[i])

@@ -1,5 +1,6 @@
 package com.youme.memoria.imageViewer
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,15 +10,18 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.github.panpf.zoomimage.GlideZoomImageView
+import com.github.panpf.zoomimage.util.OffsetCompat
+import com.github.panpf.zoomimage.view.zoom.OnViewTapListener
 import com.youme.memoria.ImageLoading.ImageUriItem
 import com.youme.memoria.R
-class ImagePagerAdapter :
+class ImagePagerAdapter(private val onclick : ()-> Unit,private val onDoubleClick : () -> Unit) :
     PagingDataAdapter<ImageUriItem, ImagePagerAdapter.ImageViewHolder>(DIFF_CALLBACK) {
 
     inner class ImageViewHolder(
         itemView: View
     ) : RecyclerView.ViewHolder(itemView) {
-        val imageView: ImageView = itemView.findViewById(R.id.imageView6)
+        val imageView: GlideZoomImageView = itemView.findViewById(R.id.imageView6)
     }
 
     override fun onCreateViewHolder(
@@ -37,6 +41,14 @@ class ImagePagerAdapter :
             Glide.with(holder.imageView).clear(holder.imageView)
             return
         }
+
+        holder.imageView.apply {
+           onViewTapListener = OnViewTapListener { _, _->
+               onclick()
+           }
+        }
+
+
 
         Glide.with(holder.imageView)
             .load(item.uri)

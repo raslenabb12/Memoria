@@ -5,8 +5,10 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.youme.memoria.Album.data.AlbumDao
 import com.youme.memoria.roomCach.MIGRATION_3_4
 import com.youme.memoria.roomCach.MIGRATION_4_5
+import com.youme.memoria.search.data.SearchHistoryDao
 
 @Database(entities = [PhotoEntity::class, AlbumPhotoEntity::class, AlbumEntity::class,SearchHistoryEntity::class], version = 5)
 abstract class PhotosDatabase : RoomDatabase() {

@@ -12,8 +12,8 @@ android {
         applicationId = "com.youme.memoria"
         minSdk = 28
         targetSdk = 36
-        versionCode = 11
-        versionName = "v1.9.0-Beta"
+        versionCode = 12
+        versionName = "v1.10.0-Beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -81,6 +81,7 @@ dependencies {
 
 
     implementation("androidx.work:work-runtime-ktx:2.12.0")
+    implementation("io.github.panpf.zoomimage:zoomimage-view-glide:1.4.0")
 
 
 

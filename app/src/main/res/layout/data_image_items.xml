@@ -12,7 +12,7 @@
         android:layout_marginTop="8dp"
         android:fontFamily="@font/hanken_grotesk"
         android:text="TextView"
-        android:textSize="18sp"
+        android:textSize="17sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

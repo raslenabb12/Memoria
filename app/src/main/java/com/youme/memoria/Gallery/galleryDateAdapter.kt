@@ -8,17 +8,23 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
+import androidx.paging.PagingData
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.google.android.material.card.MaterialCardView
 import com.youme.memoria.Album.AlbumViewer.AlbumViewerAdapter
+import com.youme.memoria.ImageLoading.ImagePagingAdapter
 import com.youme.memoria.R
 import com.youme.memoria.roomCach.AlbumPhotoEntity
 import com.youme.memoria.roomCach.AlbumsList
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -40,14 +46,17 @@ class GalleryDateAdapter(private val onClick : (Uri)-> Unit) :
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         val dateBlock = getItem(position) ?: return
+
+
         val Adapter = AlbumViewerAdapter(emptyList(), { _, _ -> }, {
             onClick(dateBlock.images[it].uri)
         },false)
 
         holder.date.text = dateBlock.dataTaken
 
+
         holder.recyclerView.apply {
-            layoutManager = GridLayoutManager(holder.itemView.context, 3)
+            this.layoutManager = GridLayoutManager(holder.itemView.context,3)
             adapter = Adapter
         }
 
