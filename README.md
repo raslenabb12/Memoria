@@ -5,7 +5,7 @@
 
 # Memoria
 <div align="center">
-  <a href="https://github.com/raslenabb12/Memoria/releases/latest/download/Memoria.apk">
+<a href="https://github.com/raslenabb12/Memoria/releases/download/v1.10.0-beta/Memoria.v1.10.0-beta.apk">
   <img src="https://img.shields.io/badge/Download-APK-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Download APK">
 </a>
 </div>
