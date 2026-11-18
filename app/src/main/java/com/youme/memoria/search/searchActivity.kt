@@ -84,6 +84,8 @@ class searchActivity : AppCompatActivity() {
             when (result.resultCode) {
                RESULT_OK -> {
                     val croppedUri: Uri? = result.data?.let { UCrop.getOutput(it) }
+
+                   searchViewModuel.setSearchImage(null)
                    searchViewModuel.setSearchImage(croppedUri)
                 }
                 UCrop.RESULT_ERROR -> {
@@ -222,19 +224,17 @@ class searchActivity : AppCompatActivity() {
         popupWindow.showAsDropDown(ancher)
     }
     private fun setupImageSearch() {
-        val container = findViewById<LinearLayout>(R.id.linearLayout2)
-        val searchToolBar = findViewById<AppBarLayout>(R.id.app_bar_layout)
+        val container = findViewById<AppBarLayout>(R.id.app_bar_layout)
+        val searchBar = findViewById<View>(R.id.search_bar)
+        val imageToolbar =
+            layoutInflater.inflate(R.layout.image_search_topbar, container, false)
+        val closeButton = imageToolbar.findViewById<ImageButton>(R.id.imageButton5)
+        val imageview = imageToolbar.findViewById<ImageView>(R.id.imageView7)
 
         lifecycleScope.launch {
             searchViewModuel.searchImage.collectLatest { image ->
-                image?.let {
-                    searchToolBar.isVisible = false
-
-                    val imageToolbar =
-                        layoutInflater.inflate(R.layout.image_search_topbar, container, false)
-                    val closeButton = imageToolbar.findViewById<ImageButton>(R.id.imageButton5)
-                    val imageview = imageToolbar.findViewById<ImageView>(R.id.imageView7)
-
+                if (image!=null){
+                    searchBar.isVisible = false
 
                     Glide.with(this@searchActivity)
                         .load(image)
@@ -242,15 +242,19 @@ class searchActivity : AppCompatActivity() {
                         .diskCacheStrategy(DiskCacheStrategy.NONE)
                         .into(imageview)
 
-                    container.addView(imageToolbar)
+                    container.addView(imageToolbar,1)
 
                     closeButton.setOnClickListener {
-                        container.removeView(imageToolbar)
-                        searchToolBar.isVisible = true
-                        searchViewModuel.setSearchImage(null)
+
                         //delete cached image
                         File(cacheDir,"cropped.jpg").delete()
+                        searchViewModuel.setSearchImage(null)
+
                     }
+                }else{
+                    searchBar.isVisible = true
+                    container.removeView(imageToolbar)
+
                 }
             }
 
@@ -445,16 +449,17 @@ class searchActivity : AppCompatActivity() {
 
         }
     }
+    private fun setupPadding(){}
 
-    private fun setupPadding(){
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.linearLayout2)) { view, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-
-            val params = view.layoutParams as ViewGroup.MarginLayoutParams
-            params.topMargin = systemBars.top
-            view.layoutParams = params
-
-            insets
-        }
-    }
+//    private fun setupPadding(){
+//        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.linearLayout2)) { view, insets ->
+//            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+//
+//            val params = view.layoutParams as ViewGroup.MarginLayoutParams
+//            params.topMargin = systemBars.top
+//            view.layoutParams = params
+//
+//            insets
+//        }
+//    }
 }

@@ -32,6 +32,8 @@ import java.util.Locale
 class GalleryDateAdapter(private val onClick : (Uri)-> Unit) :
     PagingDataAdapter<DateImageBlocks, GalleryDateAdapter.MyViewHolder>(DIFF_CALLBACK) {
 
+
+    private val viewPool = RecyclerView.RecycledViewPool()
     class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val recyclerView: RecyclerView = itemView.findViewById<RecyclerView>(R.id.rec)
         val date: TextView = itemView.findViewById<TextView>(R.id.textView17)
@@ -48,7 +50,7 @@ class GalleryDateAdapter(private val onClick : (Uri)-> Unit) :
         val dateBlock = getItem(position) ?: return
 
 
-        val Adapter = AlbumViewerAdapter(emptyList(), { _, _ -> }, {
+        val gridAdapter = AlbumViewerAdapter(emptyList(), { _, _ -> }, {
             onClick(dateBlock.images[it].uri)
         },false)
 
@@ -57,10 +59,12 @@ class GalleryDateAdapter(private val onClick : (Uri)-> Unit) :
 
         holder.recyclerView.apply {
             this.layoutManager = GridLayoutManager(holder.itemView.context,3)
-            adapter = Adapter
+            adapter = gridAdapter
+            setRecycledViewPool(viewPool)
+            setHasFixedSize(true)
         }
 
-        Adapter.submitData(
+        gridAdapter.submitData(
             dateBlock.images.map {
                 AlbumPhotoEntity("", it.uri.toString())
             }
