@@ -7,7 +7,7 @@
 <table>
   <tr>
     <td align="center" valign="middle">
-      <a href="https://github.com/raslenabb12/Memoria/releases/download/v1.11.0-beta/memoria.v1.11.0-beta.apk">
+      <a href="https://github.com/raslenabb12/Memoria/releases/download/v1.11.1-beta/memoria.v1.11.1-beta.apk">
         <img src="https://img.shields.io/badge/Download-APK-3DDC84?style=for-the-badge&logo=android&logoColor=white">
       </a>
     </td>
