@@ -74,29 +74,44 @@ You type:  "my dog with a hat"          You show a photo of a chair
 **Search**
 - **Semantic photo search** — find photos by meaning, not metadata. "Sunset at sea" finds sunset photos even if they have no tags.
 - **Multilingual search** — search in English, Arabic, French, Russian or Spanish. Queries are understood directly by the text encoder, with no translation step.
-- **Search by photo** — pick one from anywhere and find visually similar photos in your gallery, no text needed.
+- **Search by photo** — pick one from anywhere and find visually similar photos in your gallery, no text needed. The search and filter bar stays visible, so you can use the same filters (dates, folders, confidence) as in text search.
 - **Crop to search** — crop a photo down to just a face, an object, or one corner of the scene, and search with only that part.
 - **Search from other apps** — share an image from any app, pick Memoria, and search your gallery without opening Memoria first.
 - **Find Similar** — open any photo and find others like it with one tap, reusing the same embeddings your library is already indexed with.
+- **Masonry or timeline results** — switch search results between a Masonry grid and a date-grouped timeline.
 - **Search history** — recent searches are saved so you can rerun them in one tap. Pin the ones you use often, delete a single entry, or clear everything at any time.
-- **Confidence slider** — adjust the minimum match confidence for search results, from loose to strict.
+- **Confidence control** — pick a **Loose / Balanced / Strict** preset.
 - **Filters** — narrow search results by date range, folder, or camera make/model.
+- **Clear error handling** — if a search fails, Memoria shows a clear error message and later searches keep working normally.
+
+**Gallery & photo viewer**
+- **Gallery grouped by date** — your photos are grouped by the day they were taken (e.g. "MMMM dd, yyyy"), so browsing your timeline is easy.
+- **Pinch-to-zoom and pan** — deep zoom and smooth panning in the full-screen viewer, powered by [ZoomImage](https://github.com/panpf/zoomimage).
+- **Swipe down to dismiss** — pull down on a photo to close the viewer, with a progress indicator as you drag.
+- **Immersive mode** — tap a photo once to hide or show the system toolbars.
+- **Swipe between photos** — a rebuilt pagination engine keeps swiping through gallery and search results accurate and robust.
+- **Share from the viewer** — share images directly from Memoria using the viewer's bottom toolbar.
+- **Fast on long timelines** — date blocks share a single `RecycledViewPool`, reducing view inflation and memory use.
 
 **Albums**
 - **Smart Albums (Experimental)** — albums that suggest and track similar photos as your library grows, based on the average "look" of the album.
 - **Seed albums your way** — start empty, from a text search, or from one or more reference photos of your choice.
-- **Safe removal** — removing a photo from an album only affects that album, and every delete asks for confirmation first.
+- **Add any photo to an album** — add any photo from your gallery to an album yourself, not only the reference photos picked at creation.
+- **Clean album UI** — selection actions (Select All, Deselect, Delete) live in a top toolbar, and selected albums shrink slightly in the grid so your picks are easy to see.
+- **Safe removal** — removing a photo from an album only affects that album (not your other albums, and never your actual photos), and every delete asks for confirmation first.
 
 **Indexing**
-- **Folder selection** — choose exactly which folders get indexed, so screenshots, icon packs, or downloads don't pollute your search results.
+- **Folder selection** — choose exactly which folders get indexed, so screenshots, icon packs, or downloads don't pollute your search results. Selected folders are highlighted, and you can search the folder list to find directories quickly.
 - **First-run onboarding** — guided permission request and folder selection when you first open the app.
-- **Non-blocking indexing** — browse while indexing runs in the background, with a real progress bar and pause/resume support. The progress card collapses into a small toolbar indicator once indexing finishes. Indexing stays active with the screen off via a wake lock (only while the app remains open in the background).
+- **Reliable background indexing** — indexing runs through Android WorkManager, so it can continue more reliably in the background.
+- **Foreground notification** — follow indexing progress from the notification shade and pause indexing when needed.
+- **Non-blocking indexing** — browse while indexing runs, with a real progress bar and pause/resume support. The progress card collapses into a small toolbar indicator once indexing finishes, and you can optionally keep it minimized at all times with the auto-collapse setting.
 - **Thermal-aware indexing** — automatically throttles during bulk indexing to avoid overheating your device.
-- **Resilient indexing** — corrupted or unsupported images are detected and skipped instead of being retried on every run, and photos you delete from your gallery are removed from the index.
+- **Resilient indexing** — corrupted or unsupported images are detected and skipped instead of being retried on every run.
+- **Robust deletion handling** — photos you delete from your gallery are removed from the index. Photos that belong to an album are checked against the system media store first, so an album photo isn't dropped just because it's temporarily outside the current folder selection. Memoria shows a short message when it finds and cleans up missing photos.
 
 **General**
 - **Small install** — the app is around 100 MB, with all models bundled.
-- **Full-screen photo viewer** — tap any result to view it full-screen, swipe between results.
 - **Settings screen** — live indexing status, storage breakdown, and a link back to this repo.
 - **Open source** — Apache 2.0. Fork it, extend it, learn from it.
 
@@ -129,6 +144,8 @@ As of v1.7.0 the text encoder is a **custom-trained multilingual model** that un
 | Tokenizer | SentencePiece (`spm.model`), 77-token context |
 | Embedding dim | 512 floats per image/query |
 | Similarity | Cosine similarity (L2-normalized dot product) |
+| Background work | Android WorkManager |
+| Image zoom | [ZoomImage](https://github.com/panpf/zoomimage) |
 | Cropping | [uCrop](https://github.com/Yalantis/uCrop) |
 | DB | Room |
 
@@ -153,7 +170,7 @@ As of v1.7.0 the text encoder is a **custom-trained multilingual model** that un
 
 ### Install
 
-Grab the latest APK from the [Releases page](https://github.com/raslenabb12/Memoria/releases). Updates keep your existing index and albums, so you usually don't need to reindex. Check the release notes for any version that says otherwise.
+Grab the latest APK from the [Releases page](https://github.com/raslenabb12/Memoria/releases), or add the repo to [Obtainium](https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/raslenabb12/Memoria) to get updates automatically. Updates keep your existing index and albums, so you usually don't need to reindex. Check the release notes for any version that says otherwise.
 
 ### Build from source
 
@@ -183,15 +200,21 @@ Then open in Android Studio and run.
 - [x] Folder selection (index only chosen folders instead of the full library)
 - [x] Pause/resume control for indexing
 - [x] First-run onboarding flow
-- [x] Confidence threshold slider for search results
+- [x] Confidence threshold slider and Loose/Balanced/Strict presets
 - [x] Smart Albums (experimental)
 - [x] Create albums from reference photos
 - [x] Smaller app size (int8 text encoder)
 - [x] Crop-to-search
 - [x] Search from other apps via the share sheet
 - [x] Search history with pinned searches
-- [ ] Duplicate / near-duplicate photo detection
 - [x] Manually add any photo to an album
+- [x] Multilingual search (English, Arabic, French, Russian, Spanish)
+- [x] Background indexing via WorkManager with foreground notification
+- [x] Gallery grouped by date
+- [x] Search results timeline view
+- [x] Pinch-to-zoom, swipe-to-dismiss and immersive mode in the photo viewer
+- [x] Share photos from the viewer
+- [ ] Duplicate / near-duplicate photo detection
 - [ ] Native in-app media actions (move, copy, delete)
 - [ ] F-Droid distribution
 
