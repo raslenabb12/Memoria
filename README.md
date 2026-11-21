@@ -43,18 +43,17 @@ You can also search **with a photo instead of words** — pick one from anywhere
 
 Everything runs **100% on-device** using Apple's MobileCLIP-S0 model converted to TFLite. No internet connection required after setup. Your photos never leave your phone.
 
+```mermaid
+flowchart TB
+    T["Text query"] --> TE["Text Encoder"]
+    P["Photo query"] --> IE["Image Encoder"]
+    TE --> V(["512-dim vector"])
+    IE --> V
+    G["Gallery photos"] --> IE2["Image Encoder"] --> DB[("Room DB")]
+    V --> S{{"Cosine similarity"}}
+    DB --> S
+    S --> R["Ranked results"]
 ```
-You type:  "my dog with a hat"          You show a photo of a chair
-           ↓                                       ↓
-    [MobileCLIP Text Encoder]           [MobileCLIP Image Encoder]
-           ↓                                       ↓
-    512-dimensional vector  ←──── same vector space ────→
-           ↓
-    cosine similarity search against indexed photo embeddings
-           ↓
-    ranked results
-```
-
 ---
 
 ## Screenshots
